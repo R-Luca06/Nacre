@@ -244,6 +244,11 @@ impl PtyManager {
         }
     }
 
+    pub fn all_pids(&self) -> Vec<(Option<u32>, Option<u32>)> {
+        let ids: Vec<String> = self.panes.lock().unwrap().keys().cloned().collect();
+        ids.iter().filter_map(|id| self.pids(id).ok()).collect()
+    }
+
     /// Shell pid and current foreground process group leader.
     pub fn pids(&self, id: &str) -> Result<(Option<u32>, Option<u32>), String> {
         let pane = self.get(id)?;

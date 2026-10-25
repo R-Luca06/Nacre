@@ -318,3 +318,23 @@ svg {
   outline: 1px solid var(--accent);
   outline-offset: 1px;
 }
+
+.notice {
+  position: absolute;
+  z-index: 15;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: min(640px, calc(100% - 32px));
+  padding: 8px 8px 8px 12px;
+  border-left: 2px solid var(--warn);
+}
+
+.notice-body {
+  text-align: left;
+  font: 11px/1.5 var(--mono-font);
+  color: var(--text);
+}

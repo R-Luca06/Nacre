@@ -71,6 +71,8 @@ const MAPS: Record<string, (v: unknown) => boolean> = {
   keys: (v) => typeof v === "string" || (Array.isArray(v) && v.every((x) => typeof x === "string")),
 };
 
+export const enumOptions = (path: string) => rules[path]?.enum;
+
 const kind = (v: unknown) => (Array.isArray(v) ? "array" : v === null ? "null" : typeof v);
 
 function check(path: string, def: unknown, value: unknown, errors: string[]): unknown {

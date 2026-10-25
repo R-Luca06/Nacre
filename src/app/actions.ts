@@ -96,6 +96,9 @@ add("edit.pageDown", "Page Down", "Edit", ["shift+pagedown"], () => ops.scroll("
 add("view.zoomIn", "Bigger Text", "View", ["cmd+=", "cmd++", "shift+cmd+="], () => ops.zoomFont(1));
 add("view.zoomOut", "Smaller Text", "View", ["cmd+-"], () => ops.zoomFont(-1));
 add("view.zoomReset", "Actual Size", "View", ["cmd+0"], () => ops.zoomFont("reset"));
+add("app.settings", "Settings", "App", ["cmd+,"], () => ops.openSettings());
+add("app.openConfig", "Open Config File", "App", [], () => ops.openConfigFile());
+add("app.quit", "Quit Nacre", "App", ["cmd+q"], () => ops.quit());
 add("app.palette", "Command Palette", "App", ["shift+cmd+p"], () =>
   ws().setOverlay(ws().overlay?.kind === "palette" ? null : { kind: "palette" }),
 );

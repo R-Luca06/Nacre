@@ -1,4 +1,5 @@
 mod commands;
+mod config;
 mod ipc_socket;
 mod process;
 mod pty;
@@ -20,6 +21,7 @@ pub fn run() {
             if let Err(e) = ipc_socket::start(app.handle().clone()) {
                 eprintln!("nacre: socket unavailable: {e}");
             }
+            config::watch(app.handle().clone());
             commands::window::open_window(app.handle(), &[])?;
             Ok(())
         })
@@ -31,10 +33,19 @@ pub fn run() {
             commands::pty_kill,
             commands::pty_info,
             commands::pty_reset,
+            commands::config::config_load,
+            commands::config::config_init,
+            commands::config::config_set,
+            commands::config::themes_load,
+            commands::config::theme_save,
+            commands::menu::menu_set,
+            commands::app_quit,
+            commands::pty_busy,
             commands::window::window_new,
             commands::window::window_ready,
             ipc_socket::debug::debug_result,
         ])
+        .on_menu_event(|app, event| commands::menu::on_menu_event(app, event.id().as_ref()))
         .on_window_event(|window, event| {
             if let WindowEvent::Destroyed = event {
                 window.state::<PtyManager>().kill_owned_by(window.label());

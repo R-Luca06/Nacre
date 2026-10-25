@@ -5,6 +5,7 @@ import { TabView } from "../layout/TabView";
 import { Palette } from "../palette/Palette";
 import { TabBar } from "./TabBar";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { Notice } from "./Notice";
 import "./app.css";
 
 function useFullscreen() {
@@ -34,6 +35,7 @@ export function App() {
         ))}
         {overlay?.kind === "palette" && <Palette />}
         {overlay?.kind === "confirm" && <ConfirmDialog confirm={overlay.confirm} />}
+        <Notice />
       </div>
     </div>
   );

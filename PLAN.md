@@ -377,13 +377,13 @@ Chaque phase se termine par une app **qui compile, qui se lance et qui marche**.
 
 ### Phase 3 — Config et thèmes (4.E V1, 4.N V1, 4.J V1)
 - [x] Identité visuelle : proposer 2-3 directions courtes à l'utilisateur, puis écrire `docs/design.md` (voir section 0)
-- [ ] Schéma de config TOML + valeurs par défaut + validation
-- [ ] Hot reload (notify)
-- [ ] Moteur de thèmes (CSS variables + thème xterm), thèmes intégrés
-- [ ] Polices, curseur, padding, zoom
-- [ ] Moteur de raccourcis configurable
-- [ ] Palette de commandes
-- [ ] Menus natifs + icône
+- [x] Schéma de config TOML + valeurs par défaut + validation
+- [x] Hot reload (notify)
+- [x] Moteur de thèmes (CSS variables + thème xterm), thèmes intégrés
+- [x] Polices, curseur, padding, zoom
+- [x] Moteur de raccourcis configurable
+- [x] Palette de commandes
+- [x] Menus natifs + icône
 
 ### Phase 4 — Barre d'état (4.F)
 - [ ] Moteur de segments (gauche/centre/droite, intervalle de rafraîchissement, styles)
@@ -455,6 +455,7 @@ Chaque phase se termine par une app **qui compile, qui se lance et qui marche**.
 
 - 2026-10-25 · Phase 0 · Workspace Cargo (`src-tauri`, `cli`), Tauri 2 + React 19 + Vite 8, ESLint/Prettier/clippy, Vitest + cargo test.
 - 2026-10-26 · Phases 1-2 · PTY Rust (lots binaires, contrôle de flux), session xterm.js (WebGL), moteur de raccourcis (accords, AZERTY), arbre de layout testé, onglets (glisser, renommer, épingler, couleur, rouvrir), splits, zoom, broadcast, multi-fenêtres, palette, confirmation de fermeture. Direction visuelle « Nacre » choisie, `docs/design.md`. Socket debug (eval + snapshot WKWebView) pour vérifier l'UI.
+- 2026-10-26 · Phase 3 · `~/.config/nacre/config.toml` commenté généré au 1er lancement (défauts = source TS unique, testés), validation par champ avec message d'une ligne, rechargement à chaud (notify) config + `themes/*.toml`, 21 thèmes intégrés, chrome dérivé du thème, ligatures, zoom, menus natifs synchronisés avec les raccourcis, icône.
 
 ## 8. Problèmes ouverts
 

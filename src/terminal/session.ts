@@ -4,9 +4,11 @@ import { SearchAddon, type ISearchOptions } from "@xterm/addon-search";
 import { Unicode11Addon } from "@xterm/addon-unicode11";
 import { WebLinksAddon } from "@xterm/addon-web-links";
 import { WebglAddon } from "@xterm/addon-webgl";
+import { LigaturesAddon } from "@xterm/addon-ligatures";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import "@xterm/xterm/css/xterm.css";
 import * as pty from "../ipc/pty";
+import { withAlpha } from "../themes/color";
 
 export interface TerminalSettings {
   fontFamily: string;
@@ -18,6 +20,7 @@ export interface TerminalSettings {
   scrollback: number;
   optionAsMeta: "none" | "left" | "right" | "both";
   copyOnSelect: boolean;
+  ligatures: boolean;
   padding: number;
   theme: ITheme;
 }
@@ -53,6 +56,7 @@ export class TerminalSession {
   private fitAddon = new FitAddon();
   private searchAddon = new SearchAddon({ highlightLimit: 2000 });
   private webgl: WebglAddon | null = null;
+  private ligatures: LigaturesAddon | null = null;
   private opened = false;
   private started = false;
   private visible = true;
@@ -143,6 +147,7 @@ export class TerminalSession {
       this.term.open(this.host);
       this.opened = true;
       this.attachWebgl();
+      this.syncLigatures();
     }
     this.fit();
     if (!this.started) void this.start();
@@ -226,9 +231,25 @@ export class TerminalSession {
     this.term.focus();
   }
 
+  private syncLigatures() {
+    if (!this.opened) return;
+    if (this.settings.ligatures && !this.ligatures) {
+      try {
+        this.ligatures = new LigaturesAddon();
+        this.term.loadAddon(this.ligatures);
+      } catch {
+        this.ligatures = null;
+      }
+    } else if (!this.settings.ligatures && this.ligatures) {
+      this.ligatures.dispose();
+      this.ligatures = null;
+    }
+  }
+
   update(settings: TerminalSettings) {
     this.settings = settings;
     Object.assign(this.term.options, this.xtermOptions(settings));
+    this.syncLigatures();
     this.host.style.padding = `${settings.padding}px`;
     this.fit();
   }
@@ -278,13 +299,14 @@ export class TerminalSession {
   }
 
   find(query: string, opts: ISearchOptions, backwards = false) {
+    const hl = this.settings.theme.yellow ?? "#e5c07b";
     const options: ISearchOptions = {
       ...opts,
       decorations: {
-        matchBackground: "#ffffff33",
-        matchOverviewRuler: "#ffffff66",
-        activeMatchBackground: "#ffd34e99",
-        activeMatchColorOverviewRuler: "#ffd34e",
+        matchBackground: withAlpha(hl, 0.25),
+        matchOverviewRuler: withAlpha(hl, 0.5),
+        activeMatchBackground: withAlpha(hl, 0.6),
+        activeMatchColorOverviewRuler: hl,
       },
     };
     if (!query) {

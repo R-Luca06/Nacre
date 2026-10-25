@@ -2,23 +2,72 @@ import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { setLanguage } from "../i18n";
 import { rebuildKeymap } from "../keybindings/runtime";
-import { BUNDLED_MONO, activeTheme, useConfig } from "../store/config";
+import { BUNDLED_MONO, activeTheme, activeThemeName, findTheme, useConfig } from "../store/config";
+import {
+  type ThemeFile,
+  initConfig,
+  loadConfig,
+  loadThemes,
+  onConfigChanged,
+  onThemesChanged,
+} from "../ipc/config";
+import { renderTemplate } from "../config/template";
+import { themeFromRaw } from "../themes/themeFile";
+import type { Theme } from "../themes/types";
+import { defaultBindings } from "./actions";
 import { useWorkspace } from "../store/workspace";
 import { applyChrome, chromeTokens } from "../themes/apply";
 import { setSessionEvents, updateAllSessions } from "../terminal/registry";
 import { handleKeyEvent } from "../keybindings/runtime";
 import { closeWindow, newTab } from "./ops";
 import { initPaths } from "./paths";
+import { initMenu, refreshMenu } from "./menu";
 import { sessionEvents, startProcessPolling } from "./sessionEvents";
+
+let themeErrors: string[] = [];
 
 /** Re-applies everything derived from config: chrome, language, keys, terminals. */
 export function applyConfig() {
   const s = useConfig.getState();
   setLanguage(s.config.general.language);
-  applyChrome(chromeTokens(activeTheme(s)));
-  const keyErrors = rebuildKeymap(s.config.keys);
+  refreshMenu();
+  const theme = activeTheme(s);
+  const errors = [...themeErrors];
+  if (!findTheme(activeThemeName(s), s)) {
+    errors.push(`theme: "${activeThemeName(s)}" not found, using ${theme.name}`);
+  }
+  applyChrome(chromeTokens(theme));
+  errors.push(...rebuildKeymap(s.config.keys));
   updateAllSessions();
-  return keyErrors;
+  useConfig.getState().setExtraErrors(errors);
+}
+
+function applyThemeFiles(files: ThemeFile[]) {
+  const themes: Theme[] = [];
+  themeErrors = [];
+  for (const f of files) {
+    if (f.error) {
+      themeErrors.push(f.error);
+      continue;
+    }
+    const r = themeFromRaw(f.raw, f.file);
+    if (r.theme) themes.push(r.theme);
+    else if (r.error) themeErrors.push(r.error);
+  }
+  useConfig.getState().setUserThemes(themes);
+}
+
+async function loadConfiguration() {
+  const [loaded, themes] = await Promise.all([loadConfig(), loadThemes()]);
+  useConfig.setState({ path: loaded.path });
+  applyThemeFiles(themes);
+  useConfig.getState().setRaw(loaded.raw, loaded.error);
+  void initConfig(renderTemplate(defaultBindings()));
+  void onConfigChanged((l) => useConfig.getState().setRaw(l.raw, l.error));
+  void onThemesChanged(applyThemeFiles);
+  const dark = window.matchMedia("(prefers-color-scheme: dark)");
+  useConfig.getState().setSystemDark(dark.matches);
+  dark.addEventListener("change", (e) => useConfig.getState().setSystemDark(e.matches));
 }
 
 function isTextInput(el: EventTarget | null): boolean {
@@ -37,6 +86,7 @@ export async function bootstrap() {
   ]).catch(() => {});
 
   setSessionEvents(sessionEvents);
+  await loadConfiguration();
   applyConfig();
   useConfig.subscribe((s, prev) => {
     if (
@@ -60,6 +110,7 @@ export async function bootstrap() {
     true,
   );
 
+  initMenu();
   const win = getCurrentWindow();
   void win.onCloseRequested((e) => {
     e.preventDefault();

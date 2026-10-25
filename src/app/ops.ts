@@ -1,6 +1,7 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api/core";
 import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { openPath } from "@tauri-apps/plugin-opener";
 import * as pty from "../ipc/pty";
 import {
   type LayoutNode,
@@ -370,7 +371,16 @@ const activeSession = () => {
   return id ? getSession(id) : undefined;
 };
 
+function focusedInput(): HTMLInputElement | HTMLTextAreaElement | null {
+  const el = document.activeElement;
+  if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+    return el.closest(".xterm") ? null : el;
+  }
+  return null;
+}
+
 export function copy(): boolean {
+  if (focusedInput()) return document.execCommand("copy");
   const s = activeSession();
   if (!s?.hasSelection()) return false;
   void writeText(s.getSelection());
@@ -378,10 +388,16 @@ export function copy(): boolean {
 }
 
 export async function paste() {
-  const s = activeSession();
-  if (!s) return;
+  const input = focusedInput();
   const text = await readText().catch(() => "");
   if (!text) return;
+  if (input) {
+    input.setRangeText(text, input.selectionStart ?? 0, input.selectionEnd ?? 0, "end");
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    return;
+  }
+  const s = activeSession();
+  if (!s) return;
   pasteText(s.id, text);
 }
 
@@ -410,7 +426,9 @@ export function pasteText(paneId: string, text: string) {
 }
 
 export function selectAll() {
-  activeSession()?.term.selectAll();
+  const input = focusedInput();
+  if (input) input.select();
+  else activeSession()?.term.selectAll();
 }
 
 export function clearScreen() {
@@ -471,4 +489,18 @@ export function selectTabThen(id: string, then: "rename" | "duplicate") {
   selectTab(id);
   if (then === "rename") ws().setOverlay({ kind: "rename", tabId: id });
   else void duplicateTab();
+}
+
+export async function quit() {
+  const busy = await invoke<string[]>("pty_busy").catch(() => []);
+  confirmRunning(busy, t("Quit Nacre?"), () => void invoke("app_quit"));
+}
+
+export function openConfigFile() {
+  const path = useConfig.getState().path;
+  if (path) void openPath(path);
+}
+
+export function openSettings() {
+  openConfigFile();
 }

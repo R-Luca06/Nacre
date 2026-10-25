@@ -10,6 +10,8 @@ export const BUNDLED_MONO = "JetBrains Mono Variable";
 interface ConfigState {
   config: Config;
   errors: string[];
+  /** Errors from theme files and `[keys]`, shown with config errors. */
+  extraErrors: string[];
   path: string;
   userThemes: Theme[];
   systemDark: boolean;
@@ -19,11 +21,13 @@ interface ConfigState {
   setUserThemes: (themes: Theme[]) => void;
   setSystemDark: (dark: boolean) => void;
   setZoom: (zoom: number) => void;
+  setExtraErrors: (errors: string[]) => void;
 }
 
 export const useConfig = create<ConfigState>((set) => ({
   config: defaults,
   errors: [],
+  extraErrors: [],
   path: "",
   userThemes: [],
   systemDark: true,
@@ -40,6 +44,7 @@ export const useConfig = create<ConfigState>((set) => ({
   setUserThemes: (userThemes) => set({ userThemes }),
   setSystemDark: (systemDark) => set({ systemDark }),
   setZoom: (zoom) => set({ zoom }),
+  setExtraErrors: (extraErrors) => set({ extraErrors }),
 }));
 
 export function allThemes(s: Pick<ConfigState, "userThemes"> = useConfig.getState()): Theme[] {
@@ -84,6 +89,7 @@ export function terminalSettings(s = useConfig.getState(), theme?: Theme): Termi
     scrollback: c.terminal.scrollback,
     optionAsMeta: c.terminal.option_as_meta,
     copyOnSelect: c.terminal.copy_on_select,
+    ligatures: c.font.ligatures,
     padding: c.window.padding,
     theme: xtermTheme(theme ?? activeTheme(s)),
   };

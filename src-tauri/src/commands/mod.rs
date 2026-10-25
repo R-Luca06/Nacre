@@ -1,7 +1,9 @@
+pub mod config;
+pub mod menu;
 pub mod window;
 
 use tauri::ipc::{Channel, InvokeResponseBody};
-use tauri::{State, Webview};
+use tauri::{Manager, State, Webview};
 
 use crate::process::{ProcInfo, ProcessInspector};
 use crate::pty::{ExitInfo, PtyManager, SpawnOptions};
@@ -64,4 +66,21 @@ pub fn pty_info(
 #[tauri::command]
 pub fn pty_reset(webview: Webview, pty: State<'_, PtyManager>) {
     pty.kill_owned_by(webview.label());
+}
+
+/// Names of programs running in any pane of any window.
+#[tauri::command]
+pub fn pty_busy(pty: State<'_, PtyManager>, inspector: State<'_, ProcessInspector>) -> Vec<String> {
+    pty.all_pids()
+        .into_iter()
+        .filter_map(|(shell, fg)| inspector.inspect(shell, fg))
+        .filter(|p| !p.is_shell)
+        .map(|p| p.name)
+        .collect()
+}
+
+#[tauri::command]
+pub fn app_quit(app: tauri::AppHandle) {
+    app.state::<PtyManager>().kill_all();
+    app.exit(0);
 }
