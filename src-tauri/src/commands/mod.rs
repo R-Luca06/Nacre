@@ -1,3 +1,5 @@
+pub mod window;
+
 use tauri::ipc::{Channel, InvokeResponseBody};
 use tauri::{State, Webview};
 
@@ -56,4 +58,10 @@ pub fn pty_info(
 ) -> Result<Option<ProcInfo>, String> {
     let (shell, fg) = pty.pids(&id)?;
     Ok(inspector.inspect(shell, fg))
+}
+
+/// A reloaded webview starts clean: shells from its previous page are killed.
+#[tauri::command]
+pub fn pty_reset(webview: Webview, pty: State<'_, PtyManager>) {
+    pty.kill_owned_by(webview.label());
 }

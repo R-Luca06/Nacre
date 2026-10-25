@@ -24,13 +24,15 @@ export interface TerminalSettings {
 
 export interface SessionEvents {
   onKey?: (e: KeyboardEvent, session: TerminalSession) => boolean;
+  /** Intercepts user input; return true when handled (e.g. broadcast). */
+  onInput?: (data: string, session: TerminalSession) => boolean;
+  onCwd?: (cwd: string) => void;
   onTitle?: (title: string) => void;
   onBell?: () => void;
   onOutput?: () => void;
   onExit?: (info: pty.ExitInfo) => void;
   onFocus?: () => void;
   onSelection?: (text: string) => void;
-  onSearchResults?: (index: number, count: number) => void;
 }
 
 export interface LaunchOptions {
@@ -58,6 +60,7 @@ export class TerminalSession {
   private swallowKeypress = false;
   private settings: TerminalSettings;
   private launch: LaunchOptions;
+  private searchListeners = new Set<(index: number, count: number) => void>();
   exited: pty.ExitInfo | null = null;
   pid = 0;
 
@@ -93,8 +96,13 @@ export class TerminalSession {
     this.term.loadAddon(new WebLinksAddon((e, uri) => this.openLink(e, uri)));
 
     this.term.attachCustomKeyEventHandler((e) => this.handleKey(e));
-    this.term.onData((d) => this.send(d));
-    this.term.onBinary((d) => this.send(d));
+    this.term.onData((d) => this.input(d));
+    this.term.onBinary((d) => this.input(d));
+    this.term.parser.registerOscHandler(7, (data) => {
+      const cwd = parseOsc7(data);
+      if (cwd) this.events.onCwd?.(cwd);
+      return true;
+    });
     this.term.onResize(({ cols, rows }) => {
       if (this.started) void pty.resize(this.id, cols, rows);
     });
@@ -105,7 +113,7 @@ export class TerminalSession {
       if (sel) this.events.onSelection?.(sel);
     });
     this.searchAddon.onDidChangeResults(({ resultIndex, resultCount }) =>
-      this.events.onSearchResults?.(resultIndex, resultCount),
+      this.searchListeners.forEach((l) => l(resultIndex, resultCount)),
     );
     this.host.addEventListener("focusin", () => this.events.onFocus?.());
     this.host.addEventListener("keydown", (e) => this.trackOption(e), true);
@@ -199,6 +207,11 @@ export class TerminalSession {
     this.events.onOutput?.();
   }
 
+  private input(data: string) {
+    if (this.events.onInput?.(data, this)) return;
+    this.send(data);
+  }
+
   send(data: string) {
     if (this.started && !this.exited) void pty.write(this.id, data);
   }
@@ -276,12 +289,17 @@ export class TerminalSession {
     };
     if (!query) {
       this.searchAddon.clearDecorations();
-      this.events.onSearchResults?.(-1, 0);
+      this.searchListeners.forEach((l) => l(-1, 0));
       return false;
     }
     return backwards
       ? this.searchAddon.findPrevious(query, options)
       : this.searchAddon.findNext(query, options);
+  }
+
+  onSearchResults(fn: (index: number, count: number) => void) {
+    this.searchListeners.add(fn);
+    return () => void this.searchListeners.delete(fn);
   }
 
   clearSearch() {
@@ -293,5 +311,16 @@ export class TerminalSession {
     this.detachWebgl();
     this.term.dispose();
     this.host.remove();
+  }
+}
+
+/** `file://host/path` → `/path` */
+export function parseOsc7(data: string): string | null {
+  try {
+    const url = new URL(data);
+    if (url.protocol !== "file:") return null;
+    return decodeURIComponent(url.pathname) || null;
+  } catch {
+    return null;
   }
 }

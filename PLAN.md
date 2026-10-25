@@ -358,25 +358,25 @@ Chaque phase se termine par une app **qui compile, qui se lance et qui marche**.
 - [x] Scripts `npm run dev`, `npm run build`, `npm run test`, `npm run lint`
 
 ### Phase 1 — Un terminal qui marche (4.A V1)
-- [ ] Module PTY Rust : spawn du shell, lecture/écriture, resize, kill, nettoyage à la fermeture
-- [ ] Pont PTY ↔ frontend (events binaires par lots + commandes Tauri)
-- [ ] Composant xterm.js avec addons webgl, fit, unicode11, web-links, search
-- [ ] Copier/coller, Option comme Meta, bracketed paste, IME
-- [ ] Recherche Cmd+F
-- [ ] Vérif : `vim`, `htop`, `less`, couleurs truecolor, emojis, resize
+- [x] Module PTY Rust : spawn du shell, lecture/écriture, resize, kill, nettoyage à la fermeture
+- [x] Pont PTY ↔ frontend (events binaires par lots + commandes Tauri)
+- [x] Composant xterm.js avec addons webgl, fit, unicode11, web-links, search
+- [x] Copier/coller, Option comme Meta, bracketed paste, IME
+- [x] Recherche Cmd+F
+- [x] Vérif : `vim`, `htop`, `less`, couleurs truecolor, emojis, resize
 
 ### Phase 2 — Onglets et splits (4.B V1, 4.C V1, 4.D V1)
-- [ ] Modèle de layout (arbre) dans le store, avec tests unitaires (split, fermeture, navigation)
-- [ ] Barre d'onglets + raccourcis
-- [ ] Splits avec séparateurs draggables
-- [ ] Navigation directionnelle entre panes
-- [ ] Héritage du cwd (via le process au premier plan)
-- [ ] Titres automatiques
-- [ ] Multi-fenêtres
-- [ ] Confirmation de fermeture si un process tourne
+- [x] Modèle de layout (arbre) dans le store, avec tests unitaires (split, fermeture, navigation)
+- [x] Barre d'onglets + raccourcis
+- [x] Splits avec séparateurs draggables
+- [x] Navigation directionnelle entre panes
+- [x] Héritage du cwd (via le process au premier plan)
+- [x] Titres automatiques
+- [x] Multi-fenêtres
+- [x] Confirmation de fermeture si un process tourne
 
 ### Phase 3 — Config et thèmes (4.E V1, 4.N V1, 4.J V1)
-- [ ] Identité visuelle : proposer 2-3 directions courtes à l'utilisateur, puis écrire `docs/design.md` (voir section 0)
+- [x] Identité visuelle : proposer 2-3 directions courtes à l'utilisateur, puis écrire `docs/design.md` (voir section 0)
 - [ ] Schéma de config TOML + valeurs par défaut + validation
 - [ ] Hot reload (notify)
 - [ ] Moteur de thèmes (CSS variables + thème xterm), thèmes intégrés
@@ -454,6 +454,7 @@ Chaque phase se termine par une app **qui compile, qui se lance et qui marche**.
 ## 7. Avancement
 
 - 2026-10-25 · Phase 0 · Workspace Cargo (`src-tauri`, `cli`), Tauri 2 + React 19 + Vite 8, ESLint/Prettier/clippy, Vitest + cargo test.
+- 2026-10-26 · Phases 1-2 · PTY Rust (lots binaires, contrôle de flux), session xterm.js (WebGL), moteur de raccourcis (accords, AZERTY), arbre de layout testé, onglets (glisser, renommer, épingler, couleur, rouvrir), splits, zoom, broadcast, multi-fenêtres, palette, confirmation de fermeture. Direction visuelle « Nacre » choisie, `docs/design.md`. Socket debug (eval + snapshot WKWebView) pour vérifier l'UI.
 
 ## 8. Problèmes ouverts
 

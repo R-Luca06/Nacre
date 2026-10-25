@@ -20,6 +20,7 @@ pub fn run() {
             if let Err(e) = ipc_socket::start(app.handle().clone()) {
                 eprintln!("nacre: socket unavailable: {e}");
             }
+            commands::window::open_window(app.handle(), &[])?;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -29,6 +30,9 @@ pub fn run() {
             commands::pty_ack,
             commands::pty_kill,
             commands::pty_info,
+            commands::pty_reset,
+            commands::window::window_new,
+            commands::window::window_ready,
             ipc_socket::debug::debug_result,
         ])
         .on_window_event(|window, event| {
@@ -39,9 +43,15 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
 
-    app.run(|handle, event| {
-        if let RunEvent::Exit = event {
-            handle.state::<PtyManager>().kill_all();
+    app.run(|handle, event| match event {
+        RunEvent::Exit => handle.state::<PtyManager>().kill_all(),
+        #[cfg(target_os = "macos")]
+        RunEvent::Reopen {
+            has_visible_windows: false,
+            ..
+        } => {
+            let _ = commands::window::open_window(handle, &[]);
         }
+        _ => {}
     });
 }

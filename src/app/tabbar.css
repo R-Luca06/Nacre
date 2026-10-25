@@ -1,0 +1,125 @@
+.tabbar {
+  flex: none;
+  height: var(--tabbar-h);
+  display: flex;
+  padding-left: 76px;
+  border-bottom: 1px solid var(--line);
+}
+
+.tabbar.fullscreen {
+  padding-left: 4px;
+}
+
+.tabs {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+}
+
+.tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 220px;
+  padding: 0 6px 0 12px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab.active {
+  color: var(--text);
+}
+
+.tab.active::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: -1px;
+  height: 1px;
+  background: var(--pearl);
+}
+
+.tab.pinned {
+  padding: 0 10px;
+}
+
+.tab.dragging {
+  z-index: 2;
+  background: var(--bg-raised);
+  opacity: 0.9;
+}
+
+.tab-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.tab-close {
+  width: 16px;
+  height: 16px;
+  opacity: 0;
+}
+
+.tab:hover .tab-close,
+.tab.active .tab-close {
+  opacity: 1;
+}
+
+.tab.active:not(:hover) .tab-close {
+  opacity: 0;
+}
+
+.tab-color {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.tab-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  flex: none;
+}
+
+.tab-dot.bell {
+  background: var(--warn);
+}
+
+.tab-pin {
+  color: var(--text-dim);
+}
+
+.tab-rename {
+  min-width: 40px;
+  height: 20px;
+  padding: 0 4px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--bg);
+  outline: none;
+}
+
+.tab-new {
+  align-self: center;
+  margin-left: 4px;
+}
+
+.proc-icon {
+  color: var(--text-dim);
+}
+
+.tab.active .proc-icon {
+  color: var(--accent);
+}

@@ -1,0 +1,117 @@
+import { t } from "../i18n";
+import type { Bindings } from "../keybindings/keymap";
+import { useWorkspace } from "../store/workspace";
+import * as ops from "./ops";
+
+export interface Action {
+  id: string;
+  /** English label; translated at display time. */
+  label: string;
+  group: "Tab" | "Pane" | "Window" | "Edit" | "View" | "App";
+  keys: string[];
+  /** Return false to let the key reach the terminal. */
+  run: () => unknown;
+  /** Hidden from the palette (still bindable). */
+  hidden?: boolean;
+}
+
+const ws = () => useWorkspace.getState();
+
+const list: Action[] = [];
+const add = (
+  id: string,
+  label: string,
+  group: Action["group"],
+  keys: string[],
+  run: () => unknown,
+  hidden?: boolean,
+) => list.push({ id, label, group, keys, run, hidden });
+
+// Tabs
+add("tab.new", "New Tab", "Tab", ["cmd+t"], () => ops.newTab());
+add("tab.close", "Close Tab", "Tab", ["alt+cmd+w"], () => ops.closeTab());
+add("tab.next", "Next Tab", "Tab", ["shift+cmd+]", "ctrl+tab"], () => ops.cycleTab(1));
+add("tab.prev", "Previous Tab", "Tab", ["shift+cmd+[", "ctrl+shift+tab"], () => ops.cycleTab(-1));
+for (let n = 1; n <= 9; n++) {
+  add(
+    `tab.goto${n}`,
+    n === 9 ? "Last Tab" : `Tab ${n}`,
+    "Tab",
+    [`cmd+${n}`],
+    () => ops.gotoTab(n),
+    true,
+  );
+}
+add("tab.reopen", "Reopen Closed Tab", "Tab", ["shift+cmd+t"], () => ops.reopenTab());
+add("tab.duplicate", "Duplicate Tab", "Tab", [], () => ops.duplicateTab());
+add("tab.rename", "Rename Tab", "Tab", [], () =>
+  ws().setOverlay({ kind: "rename", tabId: ws().activeTabId }),
+);
+add("tab.pin", "Pin Tab", "Tab", [], () => ops.togglePin());
+add("tab.moveLeft", "Move Tab Left", "Tab", [], () => ops.moveTab(-1));
+add("tab.moveRight", "Move Tab Right", "Tab", [], () => ops.moveTab(1));
+
+// Panes
+add("pane.splitRight", "Split Right", "Pane", ["cmd+d"], () => ops.splitPane("right"));
+add("pane.splitDown", "Split Down", "Pane", ["shift+cmd+d"], () => ops.splitPane("down"));
+add("pane.close", "Close Pane", "Pane", ["cmd+w"], () => ops.closePane());
+add("pane.focusLeft", "Focus Left", "Pane", ["alt+cmd+arrowleft"], () => ops.focusDir("left"));
+add("pane.focusRight", "Focus Right", "Pane", ["alt+cmd+arrowright"], () => ops.focusDir("right"));
+add("pane.focusUp", "Focus Up", "Pane", ["alt+cmd+arrowup"], () => ops.focusDir("up"));
+add("pane.focusDown", "Focus Down", "Pane", ["alt+cmd+arrowdown"], () => ops.focusDir("down"));
+add("pane.growLeft", "Grow Left", "Pane", ["ctrl+cmd+arrowleft"], () => ops.resizeDir("left"));
+add("pane.growRight", "Grow Right", "Pane", ["ctrl+cmd+arrowright"], () => ops.resizeDir("right"));
+add("pane.growUp", "Grow Up", "Pane", ["ctrl+cmd+arrowup"], () => ops.resizeDir("up"));
+add("pane.growDown", "Grow Down", "Pane", ["ctrl+cmd+arrowdown"], () => ops.resizeDir("down"));
+add("pane.zoom", "Zoom Pane", "Pane", ["shift+cmd+enter"], () => ops.toggleZoom());
+add("pane.equalize", "Equalize Panes", "Pane", ["ctrl+shift+cmd+e"], () => ops.equalizePanes());
+add("pane.swap", "Swap with Next", "Pane", [], () => ops.swapNext());
+add("pane.broadcast", "Broadcast Input", "Pane", ["alt+cmd+i"], () => ops.toggleBroadcast());
+add("pane.toTab", "Move Pane to New Tab", "Pane", [], () => ops.paneToNewTab());
+add("layout.columns", "Layout: Columns", "Pane", [], () => ops.applyPreset("columns"));
+add("layout.rows", "Layout: Rows", "Pane", [], () => ops.applyPreset("rows"));
+add("layout.grid", "Layout: Grid", "Pane", [], () => ops.applyPreset("grid"));
+add("layout.mainStack", "Layout: Main + Stack", "Pane", [], () => ops.applyPreset("main-stack"));
+
+// Window
+add("window.new", "New Window", "Window", ["cmd+n"], () => ops.newWindow());
+add("window.close", "Close Window", "Window", ["shift+cmd+w"], () => ops.closeWindow());
+add("window.fullscreen", "Toggle Full Screen", "Window", ["ctrl+cmd+f"], () =>
+  ops.toggleFullscreen(),
+);
+add("window.onTop", "Always on Top", "Window", [], () => ops.toggleAlwaysOnTop());
+
+// Edit
+add("edit.copy", "Copy", "Edit", ["cmd+c"], () => ops.copy(), true);
+add("edit.paste", "Paste", "Edit", ["cmd+v"], () => ops.paste(), true);
+add("edit.selectAll", "Select All", "Edit", ["cmd+a"], () => ops.selectAll(), true);
+add("edit.clear", "Clear", "Edit", ["shift+cmd+k"], () => ops.clearScreen());
+add("edit.find", "Find", "Edit", ["cmd+f"], () => ops.openSearch());
+add("edit.scrollTop", "Scroll to Top", "Edit", ["cmd+home"], () => ops.scroll("top"));
+add("edit.scrollBottom", "Scroll to Bottom", "Edit", ["cmd+end"], () => ops.scroll("bottom"));
+add("edit.pageUp", "Page Up", "Edit", ["shift+pageup"], () => ops.scroll("pageUp"), true);
+add("edit.pageDown", "Page Down", "Edit", ["shift+pagedown"], () => ops.scroll("pageDown"), true);
+
+// View
+add("view.zoomIn", "Bigger Text", "View", ["cmd+=", "cmd++", "shift+cmd+="], () => ops.zoomFont(1));
+add("view.zoomOut", "Smaller Text", "View", ["cmd+-"], () => ops.zoomFont(-1));
+add("view.zoomReset", "Actual Size", "View", ["cmd+0"], () => ops.zoomFont("reset"));
+add("app.palette", "Command Palette", "App", ["shift+cmd+p"], () =>
+  ws().setOverlay(ws().overlay?.kind === "palette" ? null : { kind: "palette" }),
+);
+
+export const actions: ReadonlyArray<Action> = list;
+export const actionById = new Map(list.map((a) => [a.id, a]));
+
+/** Registers extra actions (later phases, plugins). */
+export function registerAction(a: Action) {
+  if (actionById.has(a.id)) return;
+  list.push(a);
+  actionById.set(a.id, a);
+}
+
+export function defaultBindings(): Bindings {
+  return Object.fromEntries(list.map((a) => [a.id, a.keys]));
+}
+
+export const actionLabel = (a: Action) => t(a.label);

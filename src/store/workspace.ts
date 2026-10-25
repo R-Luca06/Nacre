@@ -1,0 +1,110 @@
+import { create } from "zustand";
+import type { ExitInfo, ProcInfo } from "../ipc/pty";
+import { type LayoutNode, contains } from "../layout/tree";
+import type { LaunchOptions } from "../terminal/session";
+
+export interface PaneMeta {
+  id: string;
+  launch: LaunchOptions;
+  /** Last title set by the program via OSC 0/2. */
+  oscTitle?: string;
+  oscTitleAt?: number;
+  proc?: ProcInfo;
+  cwd?: string;
+  /** The shell reports its cwd via OSC 7; polling must not override it. */
+  cwdFromOsc?: boolean;
+  exited?: ExitInfo;
+  bell?: boolean;
+  activity?: boolean;
+}
+
+export interface Tab {
+  id: string;
+  root: LayoutNode;
+  active: string;
+  zoomed: string | null;
+  title?: string;
+  color?: string;
+  pinned?: boolean;
+  broadcast?: boolean;
+}
+
+export interface ClosedTab {
+  tab: Tab;
+  cwds: Record<string, string | undefined>;
+  index: number;
+}
+
+export interface Confirm {
+  title: string;
+  detail: string;
+  action: string;
+  onConfirm: () => void;
+}
+
+export type Overlay =
+  | { kind: "palette"; mode?: string }
+  | { kind: "confirm"; confirm: Confirm }
+  | { kind: "rename"; tabId: string }
+  | null;
+
+interface WorkspaceState {
+  tabs: Tab[];
+  activeTabId: string;
+  panes: Record<string, PaneMeta>;
+  closed: ClosedTab[];
+  overlay: Overlay;
+  /** Pane whose search bar is open. */
+  search: string | null;
+  setTabs: (tabs: Tab[], activeTabId?: string) => void;
+  updateTab: (id: string, patch: Partial<Tab>) => void;
+  setActiveTab: (id: string) => void;
+  addPane: (meta: PaneMeta) => void;
+  updatePane: (id: string, patch: Partial<PaneMeta>) => void;
+  removePanes: (ids: string[]) => void;
+  pushClosed: (c: ClosedTab) => void;
+  popClosed: () => ClosedTab | undefined;
+  setOverlay: (o: Overlay) => void;
+  setSearch: (paneId: string | null) => void;
+}
+
+export const useWorkspace = create<WorkspaceState>((set, get) => ({
+  tabs: [],
+  activeTabId: "",
+  panes: {},
+  closed: [],
+  overlay: null,
+  search: null,
+  setTabs: (tabs, activeTabId) => set((s) => ({ tabs, activeTabId: activeTabId ?? s.activeTabId })),
+  updateTab: (id, patch) =>
+    set((s) => ({ tabs: s.tabs.map((t) => (t.id === id ? { ...t, ...patch } : t)) })),
+  setActiveTab: (activeTabId) => set({ activeTabId }),
+  addPane: (meta) => set((s) => ({ panes: { ...s.panes, [meta.id]: meta } })),
+  updatePane: (id, patch) =>
+    set((s) => {
+      const cur = s.panes[id];
+      if (!cur) return s;
+      const changed = Object.entries(patch).some(([k, v]) => cur[k as keyof PaneMeta] !== v);
+      return changed ? { panes: { ...s.panes, [id]: { ...cur, ...patch } } } : s;
+    }),
+  removePanes: (ids) =>
+    set((s) => {
+      const panes = { ...s.panes };
+      for (const id of ids) delete panes[id];
+      return { panes };
+    }),
+  pushClosed: (c) => set((s) => ({ closed: [...s.closed.slice(-19), c] })),
+  popClosed: () => {
+    const c = get().closed.at(-1);
+    if (c) set((s) => ({ closed: s.closed.slice(0, -1) }));
+    return c;
+  },
+  setOverlay: (overlay) => set({ overlay }),
+  setSearch: (search) => set({ search }),
+}));
+
+export const activeTab = (s = useWorkspace.getState()) =>
+  s.tabs.find((t) => t.id === s.activeTabId);
+
+export const tabOfPane = (paneId: string, s = useWorkspace.getState()) =>
+  s.tabs.find((t) => contains(t.root, paneId));
