@@ -386,10 +386,10 @@ Chaque phase se termine par une app **qui compile, qui se lance et qui marche**.
 - [x] Menus natifs + icône
 
 ### Phase 4 — Barre d'état (4.F)
-- [ ] Moteur de segments (gauche/centre/droite, intervalle de rafraîchissement, styles)
-- [ ] Segments cwd, git, heure, process, durée, code de sortie, système
-- [ ] Segments personnalisés par script
-- [ ] Couleurs conditionnelles + actions au clic
+- [x] Moteur de segments (gauche/centre/droite, intervalle de rafraîchissement, styles)
+- [x] Segments cwd, git, heure, process, durée, code de sortie, système
+- [x] Segments personnalisés par script
+- [x] Couleurs conditionnelles + actions au clic
 
 ### Phase 5 — Intégration Claude (4.G)
 - [ ] Étude du format réel : transcripts JSONL, JSON des hooks, JSON de la status line (doc officielle + fichiers locaux)
@@ -456,6 +456,7 @@ Chaque phase se termine par une app **qui compile, qui se lance et qui marche**.
 - 2026-10-25 · Phase 0 · Workspace Cargo (`src-tauri`, `cli`), Tauri 2 + React 19 + Vite 8, ESLint/Prettier/clippy, Vitest + cargo test.
 - 2026-10-26 · Phases 1-2 · PTY Rust (lots binaires, contrôle de flux), session xterm.js (WebGL), moteur de raccourcis (accords, AZERTY), arbre de layout testé, onglets (glisser, renommer, épingler, couleur, rouvrir), splits, zoom, broadcast, multi-fenêtres, palette, confirmation de fermeture. Direction visuelle « Nacre » choisie, `docs/design.md`. Socket debug (eval + snapshot WKWebView) pour vérifier l'UI.
 - 2026-10-26 · Phase 3 · `~/.config/nacre/config.toml` commenté généré au 1er lancement (défauts = source TS unique, testés), validation par champ avec message d'une ligne, rechargement à chaud (notify) config + `themes/*.toml`, 21 thèmes intégrés, chrome dérivé du thème, ligatures, zoom, menus natifs synchronisés avec les raccourcis, icône.
+- 2026-10-26 · Phase 4 · Barre d'état (fenêtre ou par pane, haut/bas), 4 styles (minimal, simple, powerline sans police spéciale, pills), segments cwd, git, heure, process, CPU, RAM, batterie, réseau, versions d'outils par projet, k8s, docker, AWS, venv, scripts perso (`[[statusbar.custom]]`, timeout + kill du groupe), niveaux de couleur, clics.
 
 ## 8. Problèmes ouverts
 

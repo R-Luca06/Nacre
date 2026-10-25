@@ -3,6 +3,7 @@ mod config;
 mod ipc_socket;
 mod process;
 mod pty;
+mod system;
 
 use tauri::{Manager, RunEvent, WindowEvent};
 
@@ -16,6 +17,8 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .manage(PtyManager::default())
         .manage(ProcessInspector::default())
+        .manage(system::SystemMonitor::default())
+        .manage(system::ToolCache::default())
         .manage(ipc_socket::DebugState::default())
         .setup(|app| {
             if let Err(e) = ipc_socket::start(app.handle().clone()) {
@@ -39,6 +42,12 @@ pub fn run() {
             commands::config::themes_load,
             commands::config::theme_save,
             commands::menu::menu_set,
+            commands::system::system_stats,
+            commands::system::git_status,
+            commands::system::project_tools,
+            commands::system::run_script,
+            commands::system::contexts,
+            commands::system::pane_env,
             commands::app_quit,
             commands::pty_busy,
             commands::window::window_new,

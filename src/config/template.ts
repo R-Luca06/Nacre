@@ -26,12 +26,19 @@ export function renderTemplate(
     if (section === "keys") continue;
     out.push(`[${section}]`);
     for (const [key, value] of Object.entries(values as object)) {
+      if (section === "statusbar" && key === "custom") continue;
       const opts = enumOptions(`${section}.${key}`);
       const line = `# ${quoteKey(key)} = ${fmt(value)}`;
       out.push(opts ? `${line.padEnd(36)} # ${opts.join(" | ")}` : line);
     }
     out.push("");
   }
+  out.push('# Script segments: add "custom:<name>" to left/center/right.');
+  out.push("# [[statusbar.custom]]");
+  out.push('#   name = "load"');
+  out.push('#   command = "sysctl -n vm.loadavg"');
+  out.push("#   interval = 10");
+  out.push("");
   out.push("[keys]");
   out.push('# One shortcut or a list. "" unbinds. Chords: "ctrl+a d".');
   for (const [action, keys] of Object.entries(keyDefaults)) {

@@ -43,8 +43,31 @@ export const defaults = {
     paste_warning: true,
     bell: "visual" as "none" | "visual" | "sound" | "notify",
   },
+  statusbar: {
+    enabled: true,
+    position: "bottom" as "bottom" | "top",
+    scope: "window" as "window" | "pane",
+    style: "minimal" as "minimal" | "simple" | "powerline" | "pills",
+    left: ["cwd", "git"],
+    center: [] as string[],
+    right: ["process", "time"],
+    time_format: "24h" as "24h" | "24h-seconds" | "12h",
+    custom: [] as CustomSegment[],
+  },
   keys: {} as Record<string, string | string[]>,
 };
+
+export interface CustomSegment {
+  name: string;
+  command: string;
+  /** Seconds between runs. */
+  interval: number;
+  /** Regexes on the output that color the segment. */
+  warn?: string;
+  danger?: string;
+  /** Command sent to the active pane on click. */
+  click?: string;
+}
 
 export type Config = typeof defaults;
 
@@ -63,6 +86,47 @@ const rules: Record<string, Rule> = {
   "terminal.scrollback": { min: 0, max: 1_000_000, int: true },
   "terminal.option_as_meta": { enum: ["none", "left", "right", "both"] },
   "terminal.bell": { enum: ["none", "visual", "sound", "notify"] },
+  "statusbar.position": { enum: ["bottom", "top"] },
+  "statusbar.scope": { enum: ["window", "pane"] },
+  "statusbar.style": { enum: ["minimal", "simple", "powerline", "pills"] },
+  "statusbar.time_format": { enum: ["24h", "24h-seconds", "12h"] },
+};
+
+/** Arrays of tables, validated item by item. */
+const TABLE_LISTS: Record<
+  string,
+  (item: Record<string, unknown>, at: string, errors: string[]) => unknown
+> = {
+  "statusbar.custom": (item, at, errors) => {
+    if (typeof item.name !== "string" || !item.name) {
+      errors.push(`${at}.name: required`);
+      return null;
+    }
+    if (typeof item.command !== "string" || !item.command) {
+      errors.push(`${at}.command: required`);
+      return null;
+    }
+    const interval = typeof item.interval === "number" && item.interval >= 1 ? item.interval : 10;
+    const regex = (k: "warn" | "danger") => {
+      const v = item[k];
+      if (v === undefined) return undefined;
+      try {
+        new RegExp(String(v));
+        return String(v);
+      } catch {
+        errors.push(`${at}.${k}: invalid regex`);
+        return undefined;
+      }
+    };
+    return {
+      name: item.name,
+      command: item.command,
+      interval,
+      warn: regex("warn"),
+      danger: regex("danger"),
+      click: typeof item.click === "string" ? item.click : undefined,
+    };
+  },
 };
 
 /** Sections whose keys are free-form; values are checked for type only. */
@@ -77,6 +141,20 @@ const kind = (v: unknown) => (Array.isArray(v) ? "array" : v === null ? "null" :
 
 function check(path: string, def: unknown, value: unknown, errors: string[]): unknown {
   if (value === undefined) return def;
+  const listCheck = TABLE_LISTS[path];
+  if (listCheck) {
+    if (!Array.isArray(value)) {
+      errors.push(`${path}: expected a list of tables`);
+      return def;
+    }
+    return value
+      .map((item, i) =>
+        kind(item) === "object"
+          ? listCheck(item as Record<string, unknown>, `${path}[${i}]`, errors)
+          : (errors.push(`${path}[${i}]: expected a table`), null),
+      )
+      .filter((x) => x !== null);
+  }
   const mapCheck = MAPS[path];
   if (mapCheck) {
     if (kind(value) !== "object") {

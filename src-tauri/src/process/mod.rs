@@ -56,6 +56,31 @@ impl ProcessInspector {
     }
 }
 
+impl ProcessInspector {
+    /// Selected environment variables of a process (own-user processes only).
+    pub fn env(&self, pid: u32, keys: &[String]) -> std::collections::HashMap<String, String> {
+        let mut sys = self.sys.lock().unwrap();
+        let pids = [Pid::from_u32(pid)];
+        sys.refresh_processes_specifics(
+            ProcessesToUpdate::Some(&pids),
+            false,
+            ProcessRefreshKind::nothing().with_environ(UpdateKind::Always),
+        );
+        let mut out = std::collections::HashMap::new();
+        if let Some(p) = sys.process(pids[0]) {
+            for kv in p.environ() {
+                let kv = kv.to_string_lossy();
+                if let Some((k, v)) = kv.split_once('=')
+                    && keys.iter().any(|x| x == k)
+                {
+                    out.insert(k.to_owned(), v.to_owned());
+                }
+            }
+        }
+        out
+    }
+}
+
 const INTERPRETERS: &[&str] = &["node", "bun", "deno", "python", "python3", "ruby", "perl"];
 
 /// Interpreters hide the real program: `node /…/bin/claude` should read as `claude`.

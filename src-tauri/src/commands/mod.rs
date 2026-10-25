@@ -1,5 +1,6 @@
 pub mod config;
 pub mod menu;
+pub mod system;
 pub mod window;
 
 use tauri::ipc::{Channel, InvokeResponseBody};
@@ -53,7 +54,7 @@ pub fn pty_kill(pty: State<'_, PtyManager>, id: String) {
 }
 
 #[tauri::command]
-pub fn pty_info(
+pub async fn pty_info(
     pty: State<'_, PtyManager>,
     inspector: State<'_, ProcessInspector>,
     id: String,
@@ -70,13 +71,17 @@ pub fn pty_reset(webview: Webview, pty: State<'_, PtyManager>) {
 
 /// Names of programs running in any pane of any window.
 #[tauri::command]
-pub fn pty_busy(pty: State<'_, PtyManager>, inspector: State<'_, ProcessInspector>) -> Vec<String> {
-    pty.all_pids()
+pub async fn pty_busy(
+    pty: State<'_, PtyManager>,
+    inspector: State<'_, ProcessInspector>,
+) -> Result<Vec<String>, String> {
+    Ok(pty
+        .all_pids()
         .into_iter()
         .filter_map(|(shell, fg)| inspector.inspect(shell, fg))
         .filter(|p| !p.is_shell)
         .map(|p| p.name)
-        .collect()
+        .collect())
 }
 
 #[tauri::command]

@@ -33,6 +33,29 @@ describe("normalizeConfig", () => {
     expect(errors).toHaveLength(2);
   });
 
+  test("custom segments", () => {
+    const { config, errors } = normalizeConfig({
+      statusbar: {
+        custom: [
+          { name: "w", command: "echo hi", interval: 60, danger: "(" },
+          { command: "x" },
+          "nope",
+        ],
+      },
+    });
+    expect(config.statusbar.custom).toEqual([
+      {
+        name: "w",
+        command: "echo hi",
+        interval: 60,
+        warn: undefined,
+        danger: undefined,
+        click: undefined,
+      },
+    ]);
+    expect(errors).toHaveLength(3);
+  });
+
   test("ranges", () => {
     expect(normalizeConfig({ font: { size: 200 } }).errors[0]).toMatch(/between 6 and 72/);
   });

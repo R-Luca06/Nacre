@@ -14,6 +14,8 @@ export interface PaneMeta {
   /** The shell reports its cwd via OSC 7; polling must not override it. */
   cwdFromOsc?: boolean;
   exited?: ExitInfo;
+  /** From shell integration (OSC 133). */
+  lastCommand?: { command?: string; duration?: number; exitCode?: number; at: number };
   bell?: boolean;
   activity?: boolean;
 }

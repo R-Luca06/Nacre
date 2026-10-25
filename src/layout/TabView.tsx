@@ -6,6 +6,7 @@ import { getSession } from "../terminal/registry";
 import { focusPane } from "../app/ops";
 import { SearchBar } from "../terminal/SearchBar";
 import { t } from "../i18n";
+import { StatusBar } from "../statusbar/StatusBar";
 
 const pct = (n: number) => `${n * 100}%`;
 
@@ -63,6 +64,9 @@ function PaneView(props: {
   const ref = useRef<HTMLDivElement>(null);
   const searchOpen = useWorkspace((s) => s.search === id);
   const dim = useConfig((s) => s.config.window.dim_inactive);
+  const paneBar = useConfig(
+    (s) => s.config.statusbar.enabled && s.config.statusbar.scope === "pane",
+  );
 
   useLayoutEffect(() => {
     const session = getSession(id);
@@ -81,7 +85,7 @@ function PaneView(props: {
   return (
     <div
       ref={ref}
-      className={`pane${showActive && !active ? " inactive" : ""}`}
+      className={`pane${showActive && !active ? " inactive" : ""}${paneBar ? " with-bar" : ""}`}
       style={{
         ...paneStyle(rect),
         display: visible ? undefined : "none",
@@ -94,6 +98,7 @@ function PaneView(props: {
       <div className="pane-dim" />
       {showActive && active && <div className="pane-edge" />}
       {searchOpen && <SearchBar paneId={id} />}
+      {paneBar && <StatusBar paneId={id} />}
     </div>
   );
 }

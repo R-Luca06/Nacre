@@ -1,0 +1,146 @@
+.statusbar {
+  flex: none;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  height: 24px;
+  padding: 0 8px;
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.statusbar.bottom {
+  border-top: 1px solid var(--line);
+}
+
+.statusbar.top {
+  border-bottom: 1px solid var(--line);
+}
+
+.statusbar.pane-bar {
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 20px;
+  border-top: 1px solid var(--line);
+  border-bottom: 0;
+  background: var(--bg);
+}
+
+.zone {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 16px;
+}
+
+.zone.center {
+  justify-content: center;
+}
+
+.zone.right {
+  justify-content: flex-end;
+}
+
+.seg {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  height: 100%;
+}
+
+.seg span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+
+.seg.clickable:hover {
+  color: var(--text);
+}
+
+.seg.accent {
+  color: var(--accent);
+}
+
+.seg.ok {
+  color: var(--ok);
+}
+
+.seg.warn {
+  color: var(--warn);
+}
+
+.seg.danger {
+  color: var(--danger);
+}
+
+/* simple: hairline separators */
+.statusbar.simple .zone {
+  gap: 0;
+}
+
+.statusbar.simple .seg {
+  padding: 0 10px;
+}
+
+.statusbar.simple .seg + .seg {
+  border-left: 1px solid var(--line);
+}
+
+/* pills */
+.statusbar.pills .zone {
+  gap: 6px;
+}
+
+.statusbar.pills .seg {
+  height: 18px;
+  padding: 0 8px;
+  border-radius: 9px;
+  background: var(--bg-hover);
+}
+
+/* powerline: chevron-cut blocks drawn with clip-path, no special font needed */
+.statusbar.powerline {
+  padding: 0;
+}
+
+.statusbar.powerline .zone {
+  gap: 0;
+  height: 100%;
+}
+
+.statusbar.powerline .seg {
+  padding: 0 14px 0 16px;
+  margin-right: -6px;
+  background: var(--bg-hover);
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%, 8px 50%);
+}
+
+.statusbar.powerline .seg:nth-child(even) {
+  background: var(--bg-raised);
+}
+
+.statusbar.powerline .zone.left .seg:first-child {
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%);
+  padding-left: 10px;
+  color: var(--bg);
+  background: var(--accent);
+}
+
+.statusbar.powerline .zone.right .seg {
+  padding: 0 16px 0 14px;
+  margin: 0 0 0 -6px;
+  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 50%, 100% 100%, 8px 100%, 0 50%);
+}
+
+.statusbar.powerline .zone.right .seg:last-child {
+  clip-path: polygon(8px 0, 100% 0, 100% 100%, 8px 100%, 0 50%);
+  padding-right: 10px;
+}
