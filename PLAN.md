@@ -351,11 +351,11 @@ Fallback sans hooks : détection du process `claude` au premier plan du pane, pu
 Chaque phase se termine par une app **qui compile, qui se lance et qui marche**. On ne passe pas à la suite sans ça.
 
 ### Phase 0 — Fondations
-- [ ] `git init`, `.gitignore`, README minimal
-- [ ] Scaffold Tauri 2 + React + TypeScript + Vite
-- [ ] ESLint + Prettier, `cargo fmt` + `clippy`
-- [ ] Vitest + `cargo test` opérationnels (un test bidon chacun)
-- [ ] Scripts `npm run dev`, `npm run build`, `npm run test`, `npm run lint`
+- [x] `git init`, `.gitignore`, README minimal
+- [x] Scaffold Tauri 2 + React + TypeScript + Vite
+- [x] ESLint + Prettier, `cargo fmt` + `clippy`
+- [x] Vitest + `cargo test` opérationnels (un test bidon chacun)
+- [x] Scripts `npm run dev`, `npm run build`, `npm run test`, `npm run lint`
 
 ### Phase 1 — Un terminal qui marche (4.A V1)
 - [ ] Module PTY Rust : spawn du shell, lecture/écriture, resize, kill, nettoyage à la fermeture
@@ -453,7 +453,7 @@ Chaque phase se termine par une app **qui compile, qui se lance et qui marche**.
 
 ## 7. Avancement
 
-_(vide pour l'instant)_
+- 2026-10-25 · Phase 0 · Workspace Cargo (`src-tauri`, `cli`), Tauri 2 + React 19 + Vite 8, ESLint/Prettier/clippy, Vitest + cargo test.
 
 ## 8. Problèmes ouverts
 
