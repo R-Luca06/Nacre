@@ -244,6 +244,10 @@ impl PtyManager {
         }
     }
 
+    pub fn owner_of(&self, id: &str) -> Option<String> {
+        self.panes.lock().unwrap().get(id).map(|p| p.owner.clone())
+    }
+
     pub fn all_pids(&self) -> Vec<(Option<u32>, Option<u32>)> {
         let ids: Vec<String> = self.panes.lock().unwrap().keys().cloned().collect();
         ids.iter().filter_map(|id| self.pids(id).ok()).collect()

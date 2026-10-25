@@ -10,7 +10,9 @@ import {
   Cloud,
   Container,
   Cpu,
+  Asterisk,
   Folder,
+  Gauge,
   GitBranch,
   MemoryStick,
   Network,
@@ -19,8 +21,12 @@ import {
 } from "lucide-react";
 import type { Config, CustomSegment } from "../config/schema";
 import type { PaneMeta } from "../store/workspace";
+import type { ClaudeSession } from "../claude/store";
+import { contextLevel, formatCost, formatTokens } from "../claude/format";
+import { formatDuration as fmtDur } from "./format";
 import { getSession } from "../terminal/registry";
 import { tildify } from "../app/paths";
+import { t } from "../i18n";
 import { formatBytes, formatDuration, formatTime, shortenPath } from "./format";
 
 export type Level = "normal" | "dim" | "accent" | "ok" | "warn" | "danger";
@@ -30,13 +36,23 @@ export interface SegmentValue {
   icon?: LucideIcon;
   level?: Level;
   title?: string;
+  /** 0..1, drawn as a thin bar before the text. */
+  gauge?: number;
 }
 
 export interface SegmentContext {
   paneId?: string;
   meta?: PaneMeta;
+  claude?: ClaudeSession;
   config: Config;
 }
+
+/** Ids that expand to several segments. */
+const GROUPS: Record<string, string[]> = {
+  claude: ["claude.state", "claude.model", "claude.context", "claude.cost"],
+};
+
+export const expandSegments = (ids: string[]) => ids.flatMap((id) => GROUPS[id] ?? [id]);
 
 export interface SegmentDef {
   id: string;
@@ -298,3 +314,112 @@ function customSegment(c: CustomSegment): SegmentDef {
     click: c.click ? (ctx) => runInPane(ctx, c.click!) : undefined,
   };
 }
+
+// Claude
+
+const claudeDeps = (ctx: SegmentContext) => {
+  const c = ctx.claude;
+  return c
+    ? [
+        c.id,
+        c.state,
+        c.tool,
+        c.modelName,
+        c.contextTokens,
+        c.contextWindow,
+        c.costUsd,
+        c.rateLimits,
+        c.attention,
+      ]
+    : [null];
+};
+
+const STATE_TEXT: Record<string, string> = {
+  thinking: "Thinking",
+  tool: "",
+  permission: "Permission",
+  done: "Done",
+  compacting: "Compacting",
+};
+
+registerSegment({
+  id: "claude.state",
+  deps: claudeDeps,
+  compute: ({ claude: c }) => {
+    if (!c || c.state === "idle" || c.state === "ended") return null;
+    const text = c.state === "tool" ? (c.tool ?? "Tool") : STATE_TEXT[c.state];
+    const level: Level = c.state === "permission" ? "warn" : c.state === "done" ? "ok" : "accent";
+    return { text: t(text), icon: Asterisk, level, title: c.message ?? undefined };
+  },
+});
+
+registerSegment({
+  id: "claude.model",
+  deps: claudeDeps,
+  compute: ({ claude: c }) =>
+    c?.modelName ? { text: c.modelName, icon: c.state === "idle" ? Asterisk : undefined } : null,
+});
+
+registerSegment({
+  id: "claude.context",
+  deps: claudeDeps,
+  compute: ({ claude: c, config }) => {
+    if (!c || !c.contextTokens) return null;
+    const pct = c.contextPct;
+    const level = contextLevel(pct, config.claude.context_warn, config.claude.context_danger);
+    const tt = c.totals;
+    return {
+      text: `${Math.round(pct)}% · ${formatTokens(c.contextTokens)}/${formatTokens(c.contextWindow)}`,
+      gauge: Math.min(1, pct / 100),
+      level,
+      title: `in ${formatTokens(tt.input)} · out ${formatTokens(tt.output)} · cache read ${formatTokens(tt.cacheRead)} · cache write ${formatTokens(tt.cacheWrite)}`,
+    };
+  },
+  click: () => openDashboard(),
+});
+
+registerSegment({
+  id: "claude.cost",
+  deps: claudeDeps,
+  compute: ({ claude: c }) => {
+    if (!c || !c.costUsd) return null;
+    const dur = c.durationMs ?? Date.now() - c.startedAt;
+    return {
+      text: formatCost(c.costUsd, c.costExact),
+      title: `${fmtDur(dur)} · ${c.prompts} prompts`,
+    };
+  },
+  click: () => openDashboard(),
+});
+
+registerSegment({
+  id: "claude.limits",
+  deps: claudeDeps,
+  compute: ({ claude: c }) => {
+    const r = c?.rateLimits;
+    if (!r || (r.fiveHourPct == null && r.sevenDayPct == null)) return null;
+    const parts: string[] = [];
+    if (r.fiveHourPct != null) parts.push(`5h ${Math.round(r.fiveHourPct)}%`);
+    if (r.sevenDayPct != null) parts.push(`7d ${Math.round(r.sevenDayPct)}%`);
+    const max = Math.max(r.fiveHourPct ?? 0, r.sevenDayPct ?? 0);
+    return {
+      text: parts.join(" · "),
+      icon: Gauge,
+      level: max >= 90 ? "danger" : max >= 75 ? "warn" : "normal",
+    };
+  },
+});
+
+registerSegment({
+  id: "claude.duration",
+  interval: 10000,
+  deps: claudeDeps,
+  compute: ({ claude: c }) =>
+    c ? { text: `${fmtDur(c.durationMs ?? Date.now() - c.startedAt)} · ${c.prompts}` } : null,
+});
+
+let dashboardOpener: () => void = () => {};
+export function setDashboardOpener(fn: () => void) {
+  dashboardOpener = fn;
+}
+const openDashboard = () => dashboardOpener();

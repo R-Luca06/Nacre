@@ -37,7 +37,19 @@ export function iconFor(name: string): LucideIcon {
 }
 
 /** Nothing for an idle shell; a thin icon for known programs. */
-export function ProcessIcon({ proc, size = 12 }: { proc?: ProcInfo; size?: number }) {
+export function ProcessIcon({
+  proc,
+  size = 12,
+  className,
+}: {
+  proc?: ProcInfo;
+  size?: number;
+  className?: string;
+}) {
   if (!proc || proc.isShell) return null;
-  return createElement(iconFor(proc.name), { size, strokeWidth: 1.5, className: "proc-icon" });
+  return createElement(iconFor(proc.name), {
+    size,
+    strokeWidth: 1.5,
+    className: `proc-icon${className ? ` ${className}` : ""}`,
+  });
 }

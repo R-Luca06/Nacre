@@ -1,5 +1,7 @@
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import * as pty from "../ipc/pty";
+import type { ProcInfo } from "../ipc/pty";
+import { detectClaude, releasePane, sessionForPane } from "../claude/store";
 import { paneIds } from "../layout/tree";
 import { t } from "../i18n";
 import { handleKeyEvent } from "../keybindings/runtime";
@@ -73,6 +75,21 @@ export function sessionEvents(id: string): SessionEvents {
 }
 
 let tick = 0;
+const lastDetect = new Map<string, number>();
+
+/** Fallback when hooks are not installed: `claude` in the foreground means a session. */
+function trackClaude(id: string, proc: ProcInfo) {
+  const session = sessionForPane(id);
+  if (proc.isShell) {
+    if (session) releasePane(id);
+    return;
+  }
+  if (proc.name !== "claude" || session || !proc.cwd) return;
+  const last = lastDetect.get(id) ?? 0;
+  if (Date.now() - last < 5000) return;
+  lastDetect.set(id, Date.now());
+  void detectClaude(id, proc.cwd);
+}
 const shellSeen = new Map<string, number>();
 
 /** Last time the shell itself was in the foreground of a pane. */
@@ -104,6 +121,7 @@ export function startProcessPolling() {
           if (proc.isShell) shellSeen.set(id, Date.now());
           if (!meta.cwdFromOsc && proc.cwd && proc.isShell) patch.cwd = proc.cwd;
           if (Object.keys(patch).length) ws().updatePane(id, patch);
+          trackClaude(id, proc);
         } catch {
           /* pane closed meanwhile */
         }

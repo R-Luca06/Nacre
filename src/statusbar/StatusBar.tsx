@@ -1,7 +1,14 @@
 import { createElement, useEffect, useMemo, useRef, useState } from "react";
 import { useConfig } from "../store/config";
 import { activeTab, useWorkspace } from "../store/workspace";
-import { type SegmentContext, type SegmentDef, type SegmentValue, segmentDef } from "./segments";
+import {
+  type SegmentContext,
+  type SegmentDef,
+  type SegmentValue,
+  expandSegments,
+  segmentDef,
+} from "./segments";
+import { useSessionForPane } from "../claude/store";
 import "./statusbar.css";
 
 function useSegmentValue(def: SegmentDef, ctx: SegmentContext): SegmentValue | null {
@@ -43,13 +50,18 @@ function Segment({ def, ctx }: { def: SegmentDef; ctx: SegmentContext }) {
       onClick={click ? () => click(ctx) : undefined}
     >
       {value.icon && createElement(value.icon, { size: 12, strokeWidth: 1.5 })}
+      {value.gauge !== undefined && (
+        <span className="gauge">
+          <span style={{ width: `${Math.round(value.gauge * 100)}%` }} />
+        </span>
+      )}
       <span>{value.text}</span>
     </div>
   );
 }
 
 function Zone({ ids, ctx, side }: { ids: string[]; ctx: SegmentContext; side: string }) {
-  const defs = ids
+  const defs = expandSegments(ids)
     .map((id) => segmentDef(id, ctx.config))
     .filter((d): d is SegmentDef => d !== undefined);
   return (
@@ -66,9 +78,10 @@ export function StatusBar({ paneId }: { paneId?: string }) {
   const config = useConfig((s) => s.config);
   const activeId = useWorkspace((s) => (paneId ? paneId : activeTab(s)?.active));
   const meta = useWorkspace((s) => (activeId ? s.panes[activeId] : undefined));
+  const claude = useSessionForPane(activeId);
   const ctx = useMemo<SegmentContext>(
-    () => ({ paneId: activeId, meta, config }),
-    [activeId, meta, config],
+    () => ({ paneId: activeId, meta, claude, config }),
+    [activeId, meta, claude, config],
   );
   const sb = config.statusbar;
   return (

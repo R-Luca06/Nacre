@@ -22,6 +22,8 @@ import { handleKeyEvent } from "../keybindings/runtime";
 import { closeWindow, newTab } from "./ops";
 import { initPaths } from "./paths";
 import { initMenu, refreshMenu } from "./menu";
+import { initClaude } from "../claude/integration";
+import { initRemote } from "./remote";
 import { sessionEvents, startProcessPolling } from "./sessionEvents";
 
 let themeErrors: string[] = [];
@@ -111,6 +113,8 @@ export async function bootstrap() {
   );
 
   initMenu();
+  await initClaude();
+  initRemote();
   const win = getCurrentWindow();
   void win.onCloseRequested((e) => {
     e.preventDefault();

@@ -30,6 +30,7 @@ import {
 } from "../terminal/registry";
 import type { LaunchOptions } from "../terminal/session";
 import { homeDir, isDangerousPaste } from "./paths";
+import { ackPane, sessionForPane } from "../claude/store";
 
 const ws = () => useWorkspace.getState();
 
@@ -109,6 +110,7 @@ export function focusPane(id: string) {
   if (tab.active !== id) ws().updateTab(tab.id, { active: id });
   if (ws().activeTabId !== tab.id) ws().setActiveTab(tab.id);
   ws().updatePane(id, { bell: false, activity: false });
+  if (sessionForPane(id)?.attention && document.hasFocus()) ackPane(id);
   requestAnimationFrame(() => getSession(id)?.focus());
 }
 

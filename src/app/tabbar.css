@@ -123,3 +123,11 @@
 .tab.active .proc-icon {
   color: var(--accent);
 }
+
+.tab-dot.claude {
+  background: var(--accent);
+}
+
+.proc-icon.working {
+  color: var(--accent);
+}

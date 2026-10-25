@@ -1,3 +1,4 @@
+pub mod claude;
 pub mod config;
 pub mod menu;
 pub mod system;
@@ -13,19 +14,20 @@ use crate::pty::{ExitInfo, PtyManager, SpawnOptions};
 pub fn pty_spawn(
     webview: Webview,
     pty: State<'_, PtyManager>,
+    paths: State<'_, crate::AppPaths>,
     id: String,
     opts: SpawnOptions,
     on_data: Channel<InvokeResponseBody>,
     on_exit: Channel<ExitInfo>,
 ) -> Result<u32, String> {
-    pty.spawn(
-        id,
-        webview.label().to_owned(),
-        opts,
-        vec![],
-        on_data,
-        on_exit,
-    )
+    let env = vec![
+        (
+            "NACRE_SOCKET".into(),
+            paths.socket.to_string_lossy().into_owned(),
+        ),
+        ("NACRE_BIN".into(), paths.cli.to_string_lossy().into_owned()),
+    ];
+    pty.spawn(id, webview.label().to_owned(), opts, env, on_data, on_exit)
 }
 
 #[tauri::command]

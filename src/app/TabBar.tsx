@@ -5,6 +5,7 @@ import { type Tab, useWorkspace } from "../store/workspace";
 import { paneIds } from "../layout/tree";
 import { t } from "../i18n";
 import { ProcessIcon } from "./ProcessIcon";
+import { useClaude } from "../claude/store";
 import { tabTitle } from "./titles";
 import * as ops from "./ops";
 import "./tabbar.css";
@@ -79,8 +80,14 @@ function TabItem(props: {
   const ids = paneIds(tab.root);
   const meta = panes[tab.active];
   const title = tabTitle(tab, panes);
+  const sessions = useClaude((s) => s.sessions);
+  const claude = sessions.filter((c) => c.paneId && ids.includes(c.paneId) && c.state !== "ended");
+  const waiting = claude.some((c) => c.attention);
+  const working = claude.some(
+    (c) => c.state === "thinking" || c.state === "tool" || c.state === "compacting",
+  );
   const bell = ids.some((p) => panes[p]?.bell);
-  const activity = !bell && ids.some((p) => panes[p]?.activity);
+  const activity = !bell && !waiting && ids.some((p) => panes[p]?.activity);
 
   const showMenu = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -122,13 +129,14 @@ function TabItem(props: {
       title={tab.pinned ? title : undefined}
     >
       {tab.color && <span className="tab-color" style={{ background: tab.color }} />}
-      <ProcessIcon proc={meta?.proc} />
+      <ProcessIcon proc={meta?.proc} className={working ? "working" : undefined} />
       {renaming ? (
         <RenameField tab={tab} initial={title} />
       ) : (
         !tab.pinned && <span className="tab-title">{title}</span>
       )}
       {tab.pinned && !renaming && <Pin size={10} strokeWidth={1.5} className="tab-pin" />}
+      {waiting && <span className="tab-dot claude" title={t("Claude is waiting")} />}
       {(bell || activity) && <span className={`tab-dot${bell ? " bell" : ""}`} />}
       {!tab.pinned && (
         <button

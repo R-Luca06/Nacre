@@ -58,6 +58,8 @@ interface WorkspaceState {
   overlay: Overlay;
   /** Pane whose search bar is open. */
   search: string | null;
+  toast: { id: number; text: string; level: "info" | "warn"; tabId?: string } | null;
+  showToast: (text: string, level?: "info" | "warn", tabId?: string) => void;
   setTabs: (tabs: Tab[], activeTabId?: string) => void;
   updateTab: (id: string, patch: Partial<Tab>) => void;
   setActiveTab: (id: string) => void;
@@ -77,6 +79,14 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
   closed: [],
   overlay: null,
   search: null,
+  toast: null,
+  showToast: (text, level = "info", tabId) => {
+    const id = Date.now();
+    set({ toast: { id, text, level, tabId } });
+    setTimeout(() => {
+      if (get().toast?.id === id) set({ toast: null });
+    }, 5000);
+  },
   setTabs: (tabs, activeTabId) => set((s) => ({ tabs, activeTabId: activeTabId ?? s.activeTabId })),
   updateTab: (id, patch) =>
     set((s) => ({ tabs: s.tabs.map((t) => (t.id === id ? { ...t, ...patch } : t)) })),

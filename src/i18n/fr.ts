@@ -102,4 +102,12 @@ export const fr: Record<string, string> = {
   Cut: "Couper",
   Minimize: "Placer dans le Dock",
   Zoom: "Réduire/agrandir",
+  "Claude needs approval": "Claude demande une autorisation",
+  "Claude is waiting": "Claude attend ta réponse",
+  "Claude is done": "Claude a terminé",
+  "Context at {pct}% — compaction soon": "Contexte à {pct} % — compaction proche",
+  Thinking: "Réflexion",
+  Permission: "Autorisation",
+  Done: "Terminé",
+  Compacting: "Compaction",
 };
