@@ -43,7 +43,11 @@ pub async fn package_scripts(cwd: String) -> Vec<String> {
         if let Ok(text) = std::fs::read_to_string(d.join("package.json")) {
             return serde_json::from_str::<serde_json::Value>(&text)
                 .ok()
-                .and_then(|v| v.get("scripts")?.as_object().map(|m| m.keys().cloned().collect()))
+                .and_then(|v| {
+                    v.get("scripts")?
+                        .as_object()
+                        .map(|m| m.keys().cloned().collect())
+                })
                 .unwrap_or_default();
         }
         dir = d.parent().map(|p| p.to_path_buf());
