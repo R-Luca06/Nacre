@@ -34,3 +34,7 @@ interval = 10           # seconds
 warn = "^\\{ [2-9]"     # regex on the output
 click = "top"           # typed in the pane on click
 ```
+
+## Sync
+
+Everything lives in `~/.config/nacre` (`config.toml`, `themes/`, `workspaces/`, `plugins/`), so it syncs like any dotfiles: symlink the folder or single files from your dotfiles repo (GNU stow works), or clone a gist into it (`git clone <gist-url> ~/.config/nacre`). Edits to the real files apply live. Settings → General also exports and imports `config.toml`.

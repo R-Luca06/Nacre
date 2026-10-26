@@ -219,8 +219,10 @@ pub fn init(template: &str) -> Result<bool, String> {
 
 /// Watches the config directory; emits `config-changed` / `themes-changed` (debounced).
 pub fn watch(app: AppHandle) {
-    let dir = config_dir();
     let _ = std::fs::create_dir_all(themes_dir());
+    // Kept in dotfiles: the folder or config.toml may be symlinks; events carry real paths.
+    let real = |p: PathBuf| std::fs::canonicalize(&p).unwrap_or(p);
+    let dir = real(config_dir());
     thread::Builder::new()
         .name("config-watch".into())
         .spawn(move || {
@@ -231,10 +233,35 @@ pub fn watch(app: AppHandle) {
             if watcher.watch(&dir, RecursiveMode::Recursive).is_err() {
                 return;
             }
-            let config = config_path();
-            let themes = themes_dir();
-            let workspaces = workspaces_dir();
-            let plugins = plugins_dir();
+            let config = real(config_path());
+            if let Some(parent) = config.parent().filter(|p| !p.starts_with(&dir)) {
+                let _ = watcher.watch(parent, RecursiveMode::NonRecursive);
+            }
+            let themes = real(themes_dir());
+            let workspaces = real(workspaces_dir());
+            let plugins = real(plugins_dir());
+            for extra in [&themes, &workspaces, &plugins] {
+                if !extra.starts_with(&dir) && extra.is_dir() {
+                    let _ = watcher.watch(extra, RecursiveMode::Recursive);
+                }
+            }
+            // Files linked one by one (GNU stow): watch where they really are.
+            let linked: Vec<(PathBuf, PathBuf)> = [&themes, &workspaces, &plugins]
+                .into_iter()
+                .filter_map(|d| Some((d, std::fs::read_dir(d).ok()?)))
+                .flat_map(|(d, entries)| {
+                    entries
+                        .flatten()
+                        .filter(|e| e.file_type().is_ok_and(|t| t.is_symlink()))
+                        .filter_map(|e| std::fs::canonicalize(e.path()).ok())
+                        .map(move |t| (d.clone(), t))
+                })
+                .collect();
+            for (_, target) in &linked {
+                if let Some(parent) = target.parent().filter(|p| !p.starts_with(&dir)) {
+                    let _ = watcher.watch(parent, RecursiveMode::NonRecursive);
+                }
+            }
             while let Ok(first) = rx.recv() {
                 let mut events = vec![first];
                 while let Ok(e) = rx.recv_timeout(Duration::from_millis(120)) {
@@ -245,22 +272,20 @@ pub fn watch(app: AppHandle) {
                 if paths.iter().any(|p| same_file(p, &config)) {
                     let _ = app.emit("config-changed", load());
                 }
-                if paths
-                    .iter()
-                    .any(|p| p.starts_with(&themes) || same_file(p, &themes))
-                {
+                let hit = |base: &PathBuf| {
+                    paths.iter().any(|p| {
+                        p.starts_with(base)
+                            || same_file(p, base)
+                            || linked.iter().any(|(d, t)| d == base && same_file(p, t))
+                    })
+                };
+                if hit(&themes) {
                     let _ = app.emit("themes-changed", load_themes());
                 }
-                if paths
-                    .iter()
-                    .any(|p| p.starts_with(&workspaces) || same_file(p, &workspaces))
-                {
+                if hit(&workspaces) {
                     let _ = app.emit("workspaces-changed", load_workspaces());
                 }
-                if paths
-                    .iter()
-                    .any(|p| p.starts_with(&plugins) || same_file(p, &plugins))
-                {
+                if hit(&plugins) {
                     let _ = app.emit("plugins-changed", load_plugins());
                 }
             }
