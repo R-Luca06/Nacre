@@ -476,3 +476,4 @@ Chaque phase se termine par une app **qui compile, qui se lance et qui marche**.
 - Synchronisation : via dotfiles (symlink ou `git clone` d'un gist) ; pas de synchro gist intégrée à l'app. Un fichier ajouté en symlink n'est suivi qu'après redémarrage.
 - Scrollback sur disque : la sortie des applis plein écran (vim, htop) y apparaît en vrac ; seules les couleurs sont gardées.
 - Position des feux tricolores (12,16) non vérifiée visuellement : les captures WebKit ne montrent pas les contrôles natifs.
+- À corriger (vus à l'usage, 2026-10-26) : déplacer la fenêtre en glissant échoue (permission `core:window:allow-start-dragging` manquante) ; « Ouvrir le fichier de config » refusé (`~/.config/nacre` hors du scope `opener` pour ouvrir des fichiers) ; clé React en double `claude.model` dans la barre d'état quand le segment `claude` et `claude.model` sont présents ensemble.
