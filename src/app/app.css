@@ -532,3 +532,75 @@ svg {
   outline: 1px solid var(--accent);
   background: color-mix(in srgb, var(--accent) 25%, transparent);
 }
+
+/* See-through windows: opacity, blur, background image or gradient */
+
+html.see-through,
+html.see-through body,
+html.see-through #root {
+  background: transparent;
+}
+
+html.see-through .window {
+  background: var(--window-bg);
+}
+
+html.see-through .pane {
+  background: transparent;
+}
+
+html.see-through .tabview {
+  background: transparent;
+}
+
+html.see-through .pane + .pane,
+html.see-through .pane {
+  box-shadow: 0 0 0 0.5px var(--line);
+}
+
+.workspace::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--bg-image, none);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--bg-image-opacity, 0);
+}
+
+/* Fun effects (opt-in) */
+
+html.effect-scanlines .workspace::after,
+html.effect-crt .workspace::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, #0000 0 2px, #0000002e 2px 3px);
+}
+
+html.effect-crt .workspace::after {
+  background:
+    radial-gradient(ellipse at center, #0000 60%, #0000008c 100%),
+    repeating-linear-gradient(to bottom, #0000 0 2px, #00000038 2px 3px);
+}
+
+html.effect-crt .term-host .xterm-screen,
+html.effect-glow .term-host .xterm-screen {
+  filter: drop-shadow(0 0 2px color-mix(in srgb, var(--accent) 55%, transparent));
+}
+
+html.effect-crt .term-host .xterm-screen {
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--text) 45%, transparent)) contrast(1.08);
+}
+
+.cursor-trail {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}

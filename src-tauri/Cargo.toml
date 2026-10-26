@@ -12,7 +12,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [] }
+tauri = { version = "2", features = ["macos-private-api", "tray-icon", "protocol-asset", "image-png"] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -26,6 +26,8 @@ toml_edit = "0.25.17"
 tauri-plugin-notification = "2.7.0"
 base64 = "0.23.1"
 reqwest = { version = "0.13.5", default-features = false, features = ["rustls", "json", "blocking"] }
+tauri-plugin-global-shortcut = "2.4.1"
+tauri-plugin-autostart = "2.7.0"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"

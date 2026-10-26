@@ -6,8 +6,10 @@ mod ipc_socket;
 mod persistence;
 mod process;
 mod pty;
+mod quake;
 mod shell_integration;
 mod system;
+mod tray;
 
 use tauri::{Manager, RunEvent, WindowEvent};
 
@@ -37,6 +39,13 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None,
+        ))
+        .manage(quake::QuakeState::default())
+        .manage(tray::TrayState::default())
         .manage(PtyManager::default())
         .manage(ProcessInspector::default())
         .manage(system::SystemMonitor::default())
@@ -132,6 +141,10 @@ pub fn run() {
             commands::system::pane_env,
             commands::app_quit,
             commands::pty_busy,
+            commands::extras::quake_configure,
+            commands::extras::quake_toggle,
+            commands::extras::tray_set,
+            commands::extras::secure_input,
             commands::window::window_new,
             commands::session_save,
             commands::session_take,
@@ -145,6 +158,11 @@ pub fn run() {
         ])
         .on_menu_event(|app, event| commands::menu::on_menu_event(app, event.id().as_ref()))
         .on_window_event(|window, event| {
+            if let WindowEvent::Focused(false) = event
+                && window.label() == quake::LABEL
+            {
+                quake::on_blur(window.app_handle());
+            }
             if let WindowEvent::Destroyed = event {
                 window.state::<PtyManager>().kill_owned_by(window.label());
                 window

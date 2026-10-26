@@ -33,6 +33,8 @@ export interface TerminalSettings {
   promptMarks: boolean;
   blockSeparators: boolean;
   wordSeparators: string;
+  /** The background shows through (window opacity, blur, image). */
+  transparent: boolean;
   highlight: HighlightRule[];
   triggers: TriggerRule[];
   padding: number;
@@ -105,7 +107,6 @@ export class TerminalSession {
     this.host.className = "term-host";
     this.term = new Terminal({
       allowProposedApi: true,
-      allowTransparency: false,
       macOptionClickForcesSelection: true,
       rightClickSelectsWord: false,
       drawBoldTextInBrightColors: false,
@@ -189,7 +190,8 @@ export class TerminalSession {
       scrollback: s.scrollback,
       macOptionIsMeta: s.optionAsMeta === "both",
       wordSeparator: s.wordSeparators,
-      theme: s.theme,
+      allowTransparency: s.transparent,
+      theme: s.transparent ? { ...s.theme, background: "#00000000" } : s.theme,
     };
   }
 

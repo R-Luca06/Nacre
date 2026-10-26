@@ -284,6 +284,7 @@ impl ClaudeHub {
             let waiting = list.iter().filter(|s| s.attention).count();
             let on = self.badge.load(Ordering::Relaxed);
             set_badge(app, if on { waiting } else { 0 });
+            crate::tray::refresh(app);
         }
     }
 

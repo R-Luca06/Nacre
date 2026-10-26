@@ -5,6 +5,9 @@ import * as ops from "./ops";
 import { connectClaude, disconnectClaude } from "../claude/install";
 import { saveWorkspace } from "./workspaces";
 import { saveLastAsSnippet } from "./snippets";
+import { invoke } from "@tauri-apps/api/core";
+import { setValue } from "../settings/fields";
+import { useConfig } from "../store/config";
 import {
   copyOutput,
   exportScrollback,
@@ -102,6 +105,10 @@ add("window.fullscreen", "Toggle Full Screen", "Window", ["ctrl+cmd+f"], () =>
   ops.toggleFullscreen(),
 );
 add("window.onTop", "Always on Top", "Window", [], () => ops.toggleAlwaysOnTop());
+add("window.quake", "Drop-down Terminal", "Window", [], () => invoke("quake_toggle"));
+add("app.secureInput", "Secure Keyboard Entry", "App", [], () =>
+  setValue(["general", "secure_input"], !useConfig.getState().config.general.secure_input),
+);
 
 // Edit
 add("edit.copy", "Copy", "Edit", ["cmd+c"], () => ops.copy(), true);

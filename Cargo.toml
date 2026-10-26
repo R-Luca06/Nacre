@@ -11,6 +11,8 @@ strip = true
 
 [profile.dev]
 debug = "line-tables-only"
+# Incremental caches grow by gigabytes; full rebuilds of this crate stay fast.
+incremental = false
 
 [profile.dev.package."*"]
 debug = false

@@ -75,6 +75,19 @@ function General() {
       <TextField path={["shell", "program"]} label={t("Shell")} placeholder={t("Login shell")} />
       <TextField path={["shell", "cwd"]} label={t("Start in")} placeholder="~" />
       <Toggle path={["shell", "integration"]} label={t("Shell integration")} />
+      <TextField
+        path={["general", "editor"]}
+        label={t("Open files with")}
+        placeholder="code -g {file}:{line}:{col}"
+      />
+      <Toggle path={["general", "tray"]} label={t("Menu bar icon")} />
+      <Toggle path={["general", "launch_at_login"]} label={t("Open at login")} />
+      <Toggle path={["general", "secure_input"]} label={t("Secure Keyboard Entry")} />
+      <div className="set-group-title">{t("Drop-down Terminal")}</div>
+      <Toggle path={["quake", "enabled"]} label={t("Enable")} />
+      <TextField path={["quake", "shortcut"]} label={t("Global shortcut")} placeholder="ctrl+`" />
+      <NumberField path={["quake", "height"]} label={t("Height")} min={0.2} max={1} step={0.05} />
+      <Toggle path={["quake", "hide_on_blur"]} label={t("Hide when unfocused")} />
       <ConfigTransfer />
     </>
   );
@@ -190,6 +203,34 @@ function Appearance() {
         step={0.05}
       />
       <Toggle path={["window", "blur"]} label={t("Blur behind")} />
+      <TextField
+        path={["window", "background_image"]}
+        label={t("Background image")}
+        placeholder="~/Pictures/…"
+      />
+      <NumberField
+        path={["window", "background_image_opacity"]}
+        label={t("Image strength")}
+        min={0}
+        max={1}
+        step={0.05}
+      />
+      <TextField
+        path={["window", "background_gradient"]}
+        label={t("Background gradient")}
+        placeholder="linear-gradient(…)"
+      />
+      <Select
+        path={["window", "effect"]}
+        label={t("Effect")}
+        options={opts(
+          ["none", "None"],
+          ["scanlines", "Scanlines"],
+          ["glow", "Glow"],
+          ["crt", "CRT"],
+        )}
+      />
+      <Toggle path={["cursor", "trail"]} label={t("Cursor trail")} />
     </>
   );
 }

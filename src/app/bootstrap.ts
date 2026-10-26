@@ -24,6 +24,8 @@ import { restoreWindow, startAutosave, takeSaved } from "./persistence";
 import { initWorkspaces } from "./workspaces";
 import { initDragDrop } from "./dragDrop";
 import { initPlugins } from "../plugins/host";
+import { applyAppearance } from "./appearance";
+import { initSystem, isQuake } from "./system";
 import { initPaths } from "./paths";
 import { initMenu, refreshMenu } from "./menu";
 import { initClaude } from "../claude/integration";
@@ -43,6 +45,7 @@ export function applyConfig() {
     errors.push(`theme: "${activeThemeName(s)}" not found, using ${theme.name}`);
   }
   applyChrome(chromeTokens((s.config.theme.ui && findTheme(s.config.theme.ui, s)) || theme));
+  applyAppearance(s.config, theme);
   errors.push(...rebuildKeymap(s.config.keys));
   updateAllSessions();
   useConfig.getState().setExtraErrors(errors);
@@ -136,7 +139,8 @@ export async function bootstrap() {
   const restored = saved ? await restoreWindow(saved, makePaneFor, uid) : false;
   if (!restored) await newTab({ cwd: params.get("cwd") ?? undefined });
   startProcessPolling();
-  startAutosave();
+  if (!isQuake()) startAutosave();
+  initSystem();
 
   useWorkspace.subscribe((s, prev) => {
     if (s.activeTabId !== prev.activeTabId || s.panes !== prev.panes) {

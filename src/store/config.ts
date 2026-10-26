@@ -5,6 +5,7 @@ import type { Theme } from "../themes/types";
 import { xtermTheme } from "../themes/apply";
 import type { TerminalSettings } from "../terminal/session";
 import type { TriggerRule } from "../config/schema";
+import { seeThrough } from "../app/appearance";
 
 export const BUNDLED_MONO = "JetBrains Mono Variable";
 
@@ -103,6 +104,7 @@ export function terminalSettings(s = useConfig.getState(), theme?: Theme): Termi
     promptMarks: c.terminal.prompt_marks,
     blockSeparators: c.terminal.block_separators,
     wordSeparators: c.terminal.word_separators,
+    transparent: seeThrough(c),
     highlight: c.highlight,
     triggers: [...c.triggers, ...s.pluginTriggers],
     padding: c.window.padding,

@@ -35,6 +35,8 @@ pub fn open_window<R: Runtime>(
         .title("Nacre")
         .inner_size(1000.0, 640.0)
         .min_inner_size(360.0, 200.0)
+        // Always transparent so opacity and blur can change without a new window.
+        .transparent(true)
         .visible(false);
     #[cfg(target_os = "macos")]
     {

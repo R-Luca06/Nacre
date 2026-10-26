@@ -12,8 +12,13 @@
   "app": {
     "windows": [],
     "security": {
-      "csp": null
-    }
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["$HOME/**", "/Library/Desktop Pictures/**", "/System/Library/Desktop Pictures/**"]
+      }
+    },
+    "macOSPrivateApi": true
   },
   "bundle": {
     "active": true,

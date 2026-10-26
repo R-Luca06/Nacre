@@ -131,3 +131,7 @@
 .proc-icon.working {
   color: var(--accent);
 }
+
+html.quake .tabbar {
+  padding-left: 8px;
+}

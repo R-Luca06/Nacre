@@ -11,6 +11,11 @@ export const defaults = {
     /** Command to open files clicked in output: `{file}`, `{line}`, `{col}`. Empty: default app. */
     editor: "",
     restore_session: true,
+    /** Icon in the menu bar. */
+    tray: false,
+    launch_at_login: false,
+    /** Secure Keyboard Entry while Nacre is focused. */
+    secure_input: false,
     /** Lines of scrollback kept per pane across restarts; 0 disables. */
     restore_scrollback: 1000,
   },
@@ -38,12 +43,18 @@ export const defaults = {
   cursor: {
     style: "block" as "block" | "bar" | "underline",
     blink: true,
+    trail: false,
   },
   window: {
     padding: 8,
     dim_inactive: 0.3,
     opacity: 1,
     blur: false,
+    background_image: "",
+    background_image_opacity: 0.15,
+    /** Any CSS gradient, e.g. "linear-gradient(160deg, #10141a, #1a1020)". */
+    background_gradient: "",
+    effect: "none" as "none" | "crt" | "scanlines" | "glow",
   },
   terminal: {
     scrollback: 10000,
@@ -79,6 +90,14 @@ export const defaults = {
     notify: true,
     sound: false,
     dock_badge: true,
+  },
+  quake: {
+    enabled: false,
+    /** Global shortcut, works from any app. */
+    shortcut: "ctrl+`",
+    /** Share of the screen height. */
+    height: 0.45,
+    hide_on_blur: true,
   },
   ai: {
     provider: "claude-code" as "claude-code" | "api",
@@ -141,6 +160,8 @@ const rules: Record<string, Rule> = {
   "window.padding": { min: 0, max: 64 },
   "window.dim_inactive": { min: 0, max: 0.9 },
   "window.opacity": { min: 0.2, max: 1 },
+  "window.background_image_opacity": { min: 0, max: 1 },
+  "window.effect": { enum: ["none", "crt", "scanlines", "glow"] },
   "terminal.scrollback": { min: 0, max: 1_000_000, int: true },
   "terminal.option_as_meta": { enum: ["none", "left", "right", "both"] },
   "terminal.bell": { enum: ["none", "visual", "sound", "notify"] },
@@ -149,6 +170,7 @@ const rules: Record<string, Rule> = {
   "claude.context_danger": { min: 1, max: 100 },
   "claude.context_alert": { min: 1, max: 100 },
   "ai.provider": { enum: ["claude-code", "api"] },
+  "quake.height": { min: 0.2, max: 1 },
   "statusbar.position": { enum: ["bottom", "top"] },
   "statusbar.scope": { enum: ["window", "pane"] },
   "statusbar.style": { enum: ["minimal", "simple", "powerline", "pills"] },

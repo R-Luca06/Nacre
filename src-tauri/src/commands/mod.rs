@@ -2,6 +2,7 @@ pub mod ai;
 pub mod claude;
 pub mod config;
 pub mod data;
+pub mod extras;
 pub mod menu;
 pub mod system;
 pub mod window;

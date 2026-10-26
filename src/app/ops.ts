@@ -304,6 +304,12 @@ export async function closeTab(id = ws().activeTabId, force = false) {
     ws().removePanes(ids);
     if (rest.length === 0) {
       ws().setTabs([], "");
+      if (new URLSearchParams(location.search).has("quake")) {
+        // The drop-down window stays alive; it gets a fresh shell next time.
+        void getCurrentWindow().hide();
+        void newTab({});
+        return;
+      }
       void getCurrentWindow().destroy();
       return;
     }

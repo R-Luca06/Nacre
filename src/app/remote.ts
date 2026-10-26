@@ -2,9 +2,11 @@ import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useWorkspace } from "../store/workspace";
 import { focusPane, newTab, splitPane } from "./ops";
+import { openWorkspace, useWorkspaces } from "./workspaces";
 
 interface Remote {
-  cmd: "new-tab" | "split" | "focus-pane";
+  cmd: "new-tab" | "split" | "focus-pane" | "open-workspace";
+  file?: string;
   pane?: string | null;
   cwd?: string | null;
   command?: string | null;
@@ -23,6 +25,9 @@ export function initRemote() {
       await splitPane(r.side ?? "right", opts);
     } else if (r.cmd === "focus-pane" && r.pane) {
       focusPane(r.pane);
+    } else if (r.cmd === "open-workspace" && r.file) {
+      const w = useWorkspaces.getState().list.find((x) => x.file === r.file);
+      if (w) openWorkspace(w);
     }
     const win = getCurrentWindow();
     await win.show();
