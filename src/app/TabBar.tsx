@@ -14,21 +14,23 @@ import "./tabbar.css";
 
 export const TAB_COLORS = ["#E06C75", "#E5C07B", "#98C379", "#7FCFC4", "#7AA2D6", "#C49BD8"];
 
-export function TabBar({ fullscreen }: { fullscreen: boolean }) {
+export function TabBar({ fullscreen, vertical }: { fullscreen: boolean; vertical?: boolean }) {
+  const width = useConfig((s) => s.config.window.sidebar_width);
   const tabs = useWorkspace((s) => s.tabs);
   const activeTabId = useWorkspace((s) => s.activeTabId);
   const listRef = useRef<HTMLDivElement>(null);
-  const [drag, setDrag] = useState<{ id: string; x: number; dx: number } | null>(null);
+  const [drag, setDrag] = useState<{ id: string; dx: number } | null>(null);
+  const pos = (ev: { clientX: number; clientY: number }) => (vertical ? ev.clientY : ev.clientX);
 
   const startDrag = (e: React.PointerEvent, tab: Tab) => {
     if (e.button !== 0) return;
-    const startX = e.clientX;
+    const start = pos(e);
     let moved = false;
     const move = (ev: PointerEvent) => {
-      const dx = ev.clientX - startX;
+      const dx = pos(ev) - start;
       if (!moved && Math.abs(dx) < 4) return;
       moved = true;
-      setDrag({ id: tab.id, x: ev.clientX, dx });
+      setDrag({ id: tab.id, dx });
     };
     const up = (ev: PointerEvent) => {
       window.removeEventListener("pointermove", move);
@@ -39,7 +41,7 @@ export function TabBar({ fullscreen }: { fullscreen: boolean }) {
       const others = items.filter((el) => el.dataset.tab !== tab.id);
       let index = others.findIndex((el) => {
         const r = el.getBoundingClientRect();
-        return ev.clientX < r.left + r.width / 2;
+        return vertical ? ev.clientY < r.top + r.height / 2 : ev.clientX < r.left + r.width / 2;
       });
       if (index < 0) index = others.length;
       ops.reorderTab(tab.id, index);
@@ -49,7 +51,11 @@ export function TabBar({ fullscreen }: { fullscreen: boolean }) {
   };
 
   return (
-    <div className={`tabbar${fullscreen ? " fullscreen" : ""}`} data-tauri-drag-region>
+    <div
+      className={`tabbar${fullscreen ? " fullscreen" : ""}${vertical ? " vertical" : ""}`}
+      style={vertical ? { width } : undefined}
+      data-tauri-drag-region
+    >
       <div className="tabs" ref={listRef} data-tauri-drag-region>
         {tabs.map((tab, i) => (
           <TabItem
@@ -58,6 +64,7 @@ export function TabBar({ fullscreen }: { fullscreen: boolean }) {
             index={i}
             active={tab.id === activeTabId}
             dragDx={drag?.id === tab.id ? drag.dx : 0}
+            vertical={vertical}
             onPointerDown={(e) => startDrag(e, tab)}
           />
         ))}
@@ -94,9 +101,10 @@ function TabItem(props: {
   index: number;
   active: boolean;
   dragDx: number;
+  vertical?: boolean;
   onPointerDown: (e: React.PointerEvent) => void;
 }) {
-  const { tab, active, dragDx } = props;
+  const { tab, active, dragDx, vertical } = props;
   const panes = useWorkspace((s) => s.panes);
   const renaming = useWorkspace((s) => s.overlay?.kind === "rename" && s.overlay.tabId === tab.id);
   const ids = paneIds(tab.root);
@@ -159,7 +167,7 @@ function TabItem(props: {
     <div
       data-tab={tab.id}
       className={`tab${active ? " active" : ""}${tab.pinned ? " pinned" : ""}${dragDx ? " dragging" : ""}`}
-      style={dragDx ? { transform: `translateX(${dragDx}px)` } : undefined}
+      style={dragDx ? { transform: `translate${vertical ? "Y" : "X"}(${dragDx}px)` } : undefined}
       onPointerDown={props.onPointerDown}
       onClick={() => ops.selectTab(tab.id)}
       onDoubleClick={() => useWorkspace.getState().setOverlay({ kind: "rename", tabId: tab.id })}

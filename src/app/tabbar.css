@@ -135,3 +135,54 @@
 html.quake .tabbar {
   padding-left: 8px;
 }
+
+/* Sidebar */
+
+.tabbar.vertical {
+  flex-direction: column;
+  height: auto;
+  padding: 40px 6px 8px;
+  border-bottom: 0;
+  border-right: 1px solid var(--line);
+}
+
+.tabbar.vertical.fullscreen {
+  padding-top: 8px;
+}
+
+.tabbar.vertical .tabs {
+  flex-direction: column;
+  gap: 1px;
+  overflow-y: auto;
+}
+
+.tabbar.vertical .tab {
+  flex: none;
+  max-width: none;
+  height: 28px;
+  padding: 0 4px 0 10px;
+  border-radius: var(--radius);
+}
+
+.tabbar.vertical .tab-title {
+  flex: 1;
+}
+
+.tabbar.vertical .tab.active {
+  background: var(--bg-raised);
+}
+
+.tabbar.vertical .tab.active::after {
+  top: 7px;
+  bottom: 7px;
+  left: 0;
+  right: auto;
+  width: 1px;
+  height: auto;
+  background: linear-gradient(180deg, #9ed8cf, #c8c2e8 55%, #e9dcc6);
+}
+
+.tabbar.vertical .tab-new {
+  align-self: flex-start;
+  margin: 4px 0 0 4px;
+}

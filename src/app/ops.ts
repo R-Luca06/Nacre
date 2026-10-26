@@ -424,6 +424,31 @@ export function paneToNewTab() {
   focusPane(id);
 }
 
+/** Moves the active pane next to the active pane of the next tab. */
+export function paneToNextTab() {
+  const tab = activeTab();
+  const { tabs } = ws();
+  if (!tab || tabs.length < 2) return;
+  const target = tabs[(tabs.findIndex((x) => x.id === tab.id) + 1) % tabs.length];
+  const id = tab.active;
+  const left = remove(tab.root, id);
+  const rest = left ? tabs : tabs.filter((x) => x.id !== tab.id);
+  const updated = rest.map((x) => {
+    if (x.id === tab.id && left)
+      return { ...x, root: left, active: paneIds(left)[0], zoomed: null };
+    if (x.id === target.id)
+      return {
+        ...x,
+        root: split(x.root, x.active, "right", id, uid("s")),
+        active: id,
+        zoomed: null,
+      };
+    return x;
+  });
+  ws().setTabs(updated, target.id);
+  focusPane(id);
+}
+
 export function renameTab(id: string, title: string) {
   ws().updateTab(id, { title: title.trim() || undefined });
 }

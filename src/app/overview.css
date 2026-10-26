@@ -1,0 +1,58 @@
+.scrim.overview {
+  align-items: flex-start;
+  overflow-y: auto;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  width: 100%;
+  padding: 24px;
+}
+
+.overview-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  text-align: left;
+  overflow: hidden;
+  transition: border-color 100ms;
+}
+
+.overview-card.selected {
+  border-color: var(--accent);
+}
+
+.overview-text {
+  height: 168px;
+  margin: 0;
+  padding: 8px 10px;
+  overflow: hidden;
+  font: 9px/1.45 var(--mono-font);
+  color: var(--text-dim);
+  white-space: pre;
+}
+
+.overview-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  border-top: 1px solid var(--line);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.overview-card.current .overview-title {
+  color: var(--accent);
+}
+
+.overview-count {
+  color: var(--text-dim);
+}

@@ -232,6 +232,11 @@ function Appearance() {
         )}
       />
       <Toggle path={["cursor", "trail"]} label={t("Cursor trail")} />
+      <Select
+        path={["window", "tabs"]}
+        label={t("Tabs")}
+        options={opts(["top", "Top"], ["left", "Sidebar"])}
+      />
     </>
   );
 }

@@ -8,6 +8,7 @@ import { TabBar } from "./TabBar";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { Notice } from "./Notice";
 import { Toast } from "./Toast";
+import { Overview } from "./Overview";
 import { PromptDialog } from "./PromptDialog";
 import { Settings } from "../settings/Settings";
 import { Dashboard } from "../claude/Dashboard";
@@ -38,12 +39,14 @@ export function App() {
   const fullscreen = useFullscreen();
   const sb = useConfig((s) => s.config.statusbar);
   const windowBar = sb.enabled && sb.scope === "window";
+  const vertical = useConfig((s) => s.config.window.tabs === "left");
 
   return (
     <div className="window">
-      <TabBar fullscreen={fullscreen} />
+      {!vertical && <TabBar fullscreen={fullscreen} />}
       {windowBar && sb.position === "top" && <StatusBar />}
       <div className="main">
+        {vertical && <TabBar fullscreen={fullscreen} vertical />}
         <div className="workspace">
           {tabs.map((tab) => (
             <TabView key={tab.id} tab={tab} visible={tab.id === activeTabId} />
@@ -57,6 +60,7 @@ export function App() {
           {overlay?.kind === "confirm" && <ConfirmDialog confirm={overlay.confirm} />}
           {overlay?.kind === "prompt" && <PromptDialog prompt={overlay.prompt} />}
           {overlay?.kind === "settings" && <Settings />}
+          {overlay?.kind === "overview" && <Overview />}
           {overlay?.kind === "claude" && (
             <Dashboard key={overlay.view ?? "sessions"} initial={overlay.view} />
           )}

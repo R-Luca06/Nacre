@@ -71,6 +71,7 @@ export type Overlay =
   | { kind: "filter"; paneId: string; blockId: number }
   | { kind: "prompt"; prompt: PromptRequest }
   | { kind: "settings" }
+  | { kind: "overview" }
   | null;
 
 interface WorkspaceState {

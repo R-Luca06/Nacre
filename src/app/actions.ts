@@ -85,6 +85,10 @@ add("pane.equalize", "Equalize Panes", "Pane", ["ctrl+shift+cmd+e"], () => ops.e
 add("pane.swap", "Swap with Next", "Pane", [], () => ops.swapNext());
 add("pane.broadcast", "Broadcast Input", "Pane", ["alt+cmd+i"], () => ops.toggleBroadcast());
 add("pane.toTab", "Move Pane to New Tab", "Pane", [], () => ops.paneToNewTab());
+add("pane.toNextTab", "Move Pane to Next Tab", "Pane", [], () => ops.paneToNextTab());
+add("tab.overview", "Show All Tabs", "Tab", ["shift+cmd+\\"], () =>
+  useWorkspace.getState().setOverlay({ kind: "overview" }),
+);
 add("tab.toWindow", "Move Tab to New Window", "Tab", [], () => moveTab("new"));
 add("tab.toNextWindow", "Move Tab to Next Window", "Tab", [], () => moveTab("next"));
 add("layout.columns", "Layout: Columns", "Pane", [], () => ops.applyPreset("columns"));

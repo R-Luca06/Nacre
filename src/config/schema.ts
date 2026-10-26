@@ -57,6 +57,9 @@ export const defaults = {
     /** Any CSS gradient, e.g. "linear-gradient(160deg, #10141a, #1a1020)". */
     background_gradient: "",
     effect: "none" as "none" | "crt" | "scanlines" | "glow",
+    /** Tab bar on top, or a sidebar on the left. */
+    tabs: "top" as "top" | "left",
+    sidebar_width: 180,
   },
   terminal: {
     scrollback: 10000,
@@ -171,6 +174,8 @@ const rules: Record<string, Rule> = {
   "window.opacity": { min: 0.2, max: 1 },
   "window.background_image_opacity": { min: 0, max: 1 },
   "window.effect": { enum: ["none", "crt", "scanlines", "glow"] },
+  "window.tabs": { enum: ["top", "left"] },
+  "window.sidebar_width": { min: 120, max: 480, int: true },
   "terminal.scrollback": { min: 0, max: 1_000_000, int: true },
   "terminal.option_as_meta": { enum: ["none", "left", "right", "both"] },
   "terminal.bell": { enum: ["none", "visual", "sound", "notify"] },
