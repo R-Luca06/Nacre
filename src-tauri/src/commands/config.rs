@@ -18,6 +18,17 @@ pub fn themes_load() -> Vec<ThemeFile> {
 }
 
 #[tauri::command]
+pub fn plugins_load() -> Vec<config::PluginFile> {
+    let _ = std::fs::create_dir_all(config::plugins_dir());
+    config::load_plugins()
+}
+
+#[tauri::command]
+pub fn plugins_dir() -> String {
+    config::plugins_dir().to_string_lossy().into_owned()
+}
+
+#[tauri::command]
 pub fn workspaces_load() -> Vec<ThemeFile> {
     config::load_workspaces()
 }

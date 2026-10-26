@@ -90,6 +90,10 @@ export const defaults = {
   },
   /** name → command; `{{param}}` or `{{param:default}}` are asked when used. */
   snippets: {} as Record<string, string>,
+  plugins: {
+    /** Plugin names (file or folder name) that stay off. */
+    disabled: [] as string[],
+  },
   profiles: {} as Record<string, Profile>,
   keys: {} as Record<string, string | string[]>,
 };
@@ -103,9 +107,11 @@ export interface HighlightRule {
 
 export interface TriggerRule {
   regex: string;
-  action: "notify" | "sound" | "command" | "mark";
+  action: "notify" | "sound" | "command" | "mark" | "plugin";
   /** For `command`: run in the background; `$1`… are the regex groups. */
   command?: string;
+  /** For plugins. */
+  run?: (match: string[], line: string, paneId: string) => void;
 }
 
 export interface CustomSegment {

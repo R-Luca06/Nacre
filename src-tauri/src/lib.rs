@@ -98,6 +98,8 @@ pub fn run() {
             commands::config::themes_load,
             commands::config::theme_save,
             commands::config::workspaces_load,
+            commands::config::plugins_load,
+            commands::config::plugins_dir,
             commands::config::config_read,
             commands::config::config_replace,
             commands::config::workspace_save,

@@ -23,6 +23,7 @@ import { closeWindow, makePaneFor, newTab, uid } from "./ops";
 import { restoreWindow, startAutosave, takeSaved } from "./persistence";
 import { initWorkspaces } from "./workspaces";
 import { initDragDrop } from "./dragDrop";
+import { initPlugins } from "../plugins/host";
 import { initPaths } from "./paths";
 import { initMenu, refreshMenu } from "./menu";
 import { initClaude } from "../claude/integration";
@@ -97,6 +98,8 @@ export async function bootstrap() {
     if (
       s.config !== prev.config ||
       s.userThemes !== prev.userThemes ||
+      s.pluginThemes !== prev.pluginThemes ||
+      s.pluginTriggers !== prev.pluginTriggers ||
       s.systemDark !== prev.systemDark
     ) {
       applyConfig();
@@ -118,6 +121,7 @@ export async function bootstrap() {
   initMenu();
   initDragDrop();
   await initWorkspaces();
+  await initPlugins();
   await initClaude();
   initRemote();
   const win = getCurrentWindow();

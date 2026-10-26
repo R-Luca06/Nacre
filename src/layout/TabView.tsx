@@ -9,6 +9,7 @@ import { t } from "../i18n";
 import { StatusBar } from "../statusbar/StatusBar";
 import { StickyHeader } from "../terminal/StickyHeader";
 import { AiBar } from "../ai/CommandBar";
+import { CopyMode, HintsOverlay } from "../terminal/Modes";
 import { showContextMenu } from "../terminal/blockActions";
 
 const pct = (n: number) => `${n * 100}%`;
@@ -68,6 +69,7 @@ function PaneView(props: {
   const searchOpen = useWorkspace((s) => s.search === id);
   const session = getSession(id);
   const ai = useWorkspace((s) => (s.ai?.paneId === id ? s.ai : null));
+  const mode = useWorkspace((s) => (s.mode?.paneId === id ? s.mode.kind : null));
   const dim = useConfig((s) => s.config.window.dim_inactive);
   const paneBar = useConfig(
     (s) => s.config.statusbar.enabled && s.config.statusbar.scope === "pane",
@@ -111,6 +113,8 @@ function PaneView(props: {
       {searchOpen && <SearchBar paneId={id} />}
       {session && <StickyHeader session={session} />}
       {ai && <AiBar key={`${ai.mode}:${ai.blockId ?? ""}`} {...ai} />}
+      {session && mode === "hints" && <HintsOverlay session={session} />}
+      {session && mode === "copy" && <CopyMode session={session} />}
       {paneBar && <StatusBar paneId={id} />}
     </div>
   );

@@ -10,6 +10,7 @@ import { activeTab, tabOfPane, useWorkspace } from "../store/workspace";
 import { getSession } from "../terminal/registry";
 import type { SessionEvents } from "../terminal/session";
 import { beep, ring } from "./bell";
+import { emitCommandFinished } from "../plugins/host";
 import { invoke } from "@tauri-apps/api/core";
 import { fmtMs } from "../terminal/blocks";
 import { closePane, focusPane, lookOf } from "./ops";
@@ -46,7 +47,13 @@ export function sessionEvents(id: string): SessionEvents {
     onTitle: (title) => ws().updatePane(id, { oscTitle: title, oscTitleAt: Date.now() }),
     cwd: () => ws().panes[id]?.cwd,
     onTrigger: (rule, m, line) => {
-      if (rule.action === "notify") {
+      if (rule.run) {
+        try {
+          rule.run([...m], line, id);
+        } catch (e) {
+          console.error(e);
+        }
+      } else if (rule.action === "notify") {
         void invoke("notify", { title: t("Trigger"), body: line.trim().slice(0, 200) }).catch(
           () => {},
         );
@@ -75,6 +82,13 @@ export function sessionEvents(id: string): SessionEvents {
     },
     onCommandFinished: (b) => {
       const duration = (b.finishedAt ?? 0) - (b.startedAt ?? 0);
+      emitCommandFinished({
+        paneId: id,
+        command: b.command,
+        exitCode: b.exitCode,
+        duration,
+        cwd: ws().panes[id]?.cwd,
+      });
       if (b.command) {
         void invoke("history_add", {
           command: b.command,

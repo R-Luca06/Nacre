@@ -95,6 +95,69 @@ pub fn workspaces_dir() -> PathBuf {
     config_dir().join("workspaces")
 }
 
+pub fn plugins_dir() -> PathBuf {
+    config_dir().join("plugins")
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct PluginFile {
+    pub name: String,
+    pub path: String,
+    pub code: Option<String>,
+    pub error: Option<String>,
+}
+
+/// `plugins/<name>.js` or `plugins/<name>/index.js`.
+pub fn load_plugins() -> Vec<PluginFile> {
+    let Ok(entries) = std::fs::read_dir(plugins_dir()) else {
+        return vec![];
+    };
+    let mut out: Vec<PluginFile> = entries
+        .flatten()
+        .filter_map(|e| {
+            let p = e.path();
+            let (name, file) = if p.is_dir() {
+                (
+                    p.file_name()?.to_string_lossy().into_owned(),
+                    p.join("index.js"),
+                )
+            } else if p.extension().is_some_and(|x| x == "js" || x == "mjs") {
+                (p.file_stem()?.to_string_lossy().into_owned(), p.clone())
+            } else {
+                return None;
+            };
+            if !file.is_file() {
+                return None;
+            }
+            let path = file.to_string_lossy().into_owned();
+            Some(match std::fs::metadata(&file) {
+                Ok(m) if m.len() > 2 * 1024 * 1024 => PluginFile {
+                    name,
+                    path,
+                    code: None,
+                    error: Some("larger than 2 MB".into()),
+                },
+                _ => match std::fs::read_to_string(&file) {
+                    Ok(code) => PluginFile {
+                        name,
+                        path,
+                        code: Some(code),
+                        error: None,
+                    },
+                    Err(e) => PluginFile {
+                        name,
+                        path,
+                        code: None,
+                        error: Some(e.to_string()),
+                    },
+                },
+            })
+        })
+        .collect();
+    out.sort_by(|a, b| a.name.cmp(&b.name));
+    out
+}
+
 pub fn load_themes() -> Vec<ThemeFile> {
     load_dir(&themes_dir(), "themes")
 }
@@ -171,6 +234,7 @@ pub fn watch(app: AppHandle) {
             let config = config_path();
             let themes = themes_dir();
             let workspaces = workspaces_dir();
+            let plugins = plugins_dir();
             while let Ok(first) = rx.recv() {
                 let mut events = vec![first];
                 while let Ok(e) = rx.recv_timeout(Duration::from_millis(120)) {
@@ -192,6 +256,12 @@ pub fn watch(app: AppHandle) {
                     .any(|p| p.starts_with(&workspaces) || same_file(p, &workspaces))
                 {
                     let _ = app.emit("workspaces-changed", load_workspaces());
+                }
+                if paths
+                    .iter()
+                    .any(|p| p.starts_with(&plugins) || same_file(p, &plugins))
+                {
+                    let _ = app.emit("plugins-changed", load_plugins());
                 }
             }
         })

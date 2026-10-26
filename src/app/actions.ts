@@ -116,6 +116,12 @@ add("block.copyOutput", "Copy Last Output", "Edit", ["shift+cmd+o"], () =>
 );
 add("block.selectOutput", "Select Last Output", "Edit", [], () => lastBlockAction(selectOutput));
 add("block.rerun", "Run Last Command Again", "Edit", [], () => lastBlockAction(rerun));
+const modeFor = (kind: "hints" | "copy") => {
+  const id = ws().tabs.find((x) => x.id === ws().activeTabId)?.active;
+  if (id) ws().setMode(ws().mode?.kind === kind ? null : { kind, paneId: id });
+};
+add("mode.hints", "Pick from Screen", "Edit", ["shift+cmd+u"], () => modeFor("hints"));
+add("mode.copy", "Copy Mode", "Edit", ["shift+cmd+x"], () => modeFor("copy"));
 add("edit.exportText", "Export Scrollback as Text", "Edit", [], () => exportScrollback("text"));
 add("edit.exportHtml", "Export Scrollback as HTML", "Edit", [], () => exportScrollback("html"));
 add("edit.scrollTop", "Scroll to Top", "Edit", ["cmd+home"], () => ops.scroll("top"));
@@ -177,11 +183,17 @@ add("app.palette", "Command Palette", "App", ["shift+cmd+p"], () =>
 export const actions: ReadonlyArray<Action> = list;
 export const actionById = new Map(list.map((a) => [a.id, a]));
 
-/** Registers extra actions (later phases, plugins). */
+/** Registers extra actions (plugins). */
 export function registerAction(a: Action) {
   if (actionById.has(a.id)) return;
   list.push(a);
   actionById.set(a.id, a);
+}
+
+export function unregisterAction(id: string) {
+  const i = list.findIndex((a) => a.id === id);
+  if (i >= 0) list.splice(i, 1);
+  actionById.delete(id);
 }
 
 export function defaultBindings(): Bindings {

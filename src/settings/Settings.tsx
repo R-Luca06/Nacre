@@ -8,13 +8,15 @@ import { activeTab, useWorkspace } from "../store/workspace";
 import { focusPane } from "../app/ops";
 import { segmentIds } from "../statusbar/segments";
 import { connectClaude, disconnectClaude, useInstallStatus } from "../claude/install";
-import { ListField, NumberField, Select, TextField, Toggle } from "./fields";
+import { ListField, NumberField, Select, TextField, Toggle, setValue } from "./fields";
+import { usePlugins } from "../plugins/host";
 import { ThemesSection } from "./ThemesSection";
 import { KeysSection } from "./KeysSection";
 import { availableMonoFonts } from "./fonts";
 import "./settings.css";
 
-type SectionId = "general" | "appearance" | "terminal" | "statusbar" | "claude" | "ai" | "keys";
+type SectionId =
+  "general" | "appearance" | "terminal" | "statusbar" | "claude" | "ai" | "keys" | "plugins";
 
 const SECTIONS: { id: SectionId; label: string }[] = [
   { id: "general", label: "General" },
@@ -24,6 +26,7 @@ const SECTIONS: { id: SectionId; label: string }[] = [
   { id: "claude", label: "Claude" },
   { id: "ai", label: "AI" },
   { id: "keys", label: "Shortcuts" },
+  { id: "plugins", label: "Plugins" },
 ];
 
 const opts = (...values: [string, string][]) =>
@@ -410,6 +413,47 @@ function AiSection() {
   );
 }
 
+function PluginsSection() {
+  const list = usePlugins((s) => s.list);
+  const disabled = useConfig((s) => s.config.plugins.disabled);
+  const toggle = (name: string) =>
+    void setValue(
+      ["plugins", "disabled"],
+      disabled.includes(name) ? disabled.filter((n) => n !== name) : [...disabled, name],
+    );
+  return (
+    <>
+      {list.length === 0 && <div className="set-row dim">{t("No plugins installed.")}</div>}
+      {list.map((p) => (
+        <div key={p.name} className="set-row">
+          <span className="set-label">
+            {p.name}
+            {p.error && <span className="key-clash">{p.error}</span>}
+          </span>
+          <span className="set-control">
+            <button
+              className={`toggle${p.state !== "disabled" ? " on" : ""}`}
+              role="switch"
+              aria-checked={p.state !== "disabled"}
+              onClick={() => toggle(p.name)}
+            >
+              <span />
+            </button>
+          </span>
+        </div>
+      ))}
+      <div className="set-actions" style={{ marginTop: 12 }}>
+        <button
+          className="btn"
+          onClick={() => void invoke<string>("plugins_dir").then((d) => openPath(d))}
+        >
+          {t("Open plugins folder")}
+        </button>
+      </div>
+    </>
+  );
+}
+
 export function Settings() {
   const [section, setSection] = useState<SectionId>("appearance");
   const path = useConfig((s) => s.path);
@@ -454,6 +498,7 @@ export function Settings() {
           {section === "claude" && <ClaudeSection />}
           {section === "ai" && <AiSection />}
           {section === "keys" && <KeysSection />}
+          {section === "plugins" && <PluginsSection />}
         </div>
       </div>
     </div>

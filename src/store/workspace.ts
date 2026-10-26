@@ -4,6 +4,7 @@ import { type LayoutNode, contains } from "../layout/tree";
 import type { LaunchOptions } from "../terminal/session";
 import type { AiRequestState } from "../ai/CommandBar";
 import type { PaletteMode } from "../palette/Palette";
+import type { PaneMode } from "../terminal/Modes";
 
 export interface PaneMeta {
   id: string;
@@ -83,6 +84,9 @@ interface WorkspaceState {
   /** Side panel shown next to the panes. */
   panel: "claude" | "chat" | null;
   togglePanel: (p: "claude" | "chat") => void;
+  /** Keyboard mode (hints, copy) over a pane. */
+  mode: PaneMode | null;
+  setMode: (m: PaneMode | null) => void;
   /** AI bar shown at the bottom of a pane. */
   ai: AiRequestState | null;
   setAi: (a: AiRequestState | null) => void;
@@ -109,6 +113,8 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
   toast: null,
   panel: null,
   ai: null,
+  mode: null,
+  setMode: (mode) => set({ mode }),
   setAi: (ai) => set({ ai }),
   togglePanel: (p) => set((s) => ({ panel: s.panel === p ? null : p })),
   showToast: (text, level = "info", tabId) => {

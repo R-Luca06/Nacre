@@ -4,6 +4,7 @@ import { builtinThemes, fallbackTheme } from "../themes/builtin";
 import type { Theme } from "../themes/types";
 import { xtermTheme } from "../themes/apply";
 import type { TerminalSettings } from "../terminal/session";
+import type { TriggerRule } from "../config/schema";
 
 export const BUNDLED_MONO = "JetBrains Mono Variable";
 
@@ -14,6 +15,9 @@ interface ConfigState {
   extraErrors: string[];
   path: string;
   userThemes: Theme[];
+  /** Themes and triggers contributed by plugins. */
+  pluginThemes: Theme[];
+  pluginTriggers: TriggerRule[];
   systemDark: boolean;
   /** Per-window font zoom, in points. */
   zoom: number;
@@ -30,6 +34,8 @@ export const useConfig = create<ConfigState>((set) => ({
   extraErrors: [],
   path: "",
   userThemes: [],
+  pluginThemes: [],
+  pluginTriggers: [],
   systemDark: true,
   zoom: 0,
   setRaw: (raw, parseError) => {
@@ -47,9 +53,13 @@ export const useConfig = create<ConfigState>((set) => ({
   setExtraErrors: (extraErrors) => set({ extraErrors }),
 }));
 
-export function allThemes(s: Pick<ConfigState, "userThemes"> = useConfig.getState()): Theme[] {
-  const user = new Map(s.userThemes.map((t) => [t.name, t]));
-  return [...builtinThemes.filter((t) => !user.has(t.name)), ...s.userThemes];
+export function allThemes(
+  s: Pick<ConfigState, "userThemes"> &
+    Partial<Pick<ConfigState, "pluginThemes">> = useConfig.getState(),
+): Theme[] {
+  const extra = [...(s.pluginThemes ?? []), ...s.userThemes];
+  const names = new Set(extra.map((t) => t.name));
+  return [...builtinThemes.filter((t) => !names.has(t.name)), ...extra];
 }
 
 export function findTheme(name: string, s = useConfig.getState()): Theme | undefined {
@@ -94,7 +104,7 @@ export function terminalSettings(s = useConfig.getState(), theme?: Theme): Termi
     blockSeparators: c.terminal.block_separators,
     wordSeparators: c.terminal.word_separators,
     highlight: c.highlight,
-    triggers: c.triggers,
+    triggers: [...c.triggers, ...s.pluginTriggers],
     padding: c.window.padding,
     theme: xtermTheme(theme ?? activeTheme(s)),
   };

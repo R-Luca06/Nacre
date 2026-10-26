@@ -79,6 +79,10 @@ export function segmentDef(id: string, config: Config): SegmentDef | undefined {
 
 export const segmentIds = () => [...registry.keys()];
 
+export function unregisterSegment(id: string) {
+  registry.delete(id);
+}
+
 /** Runs a command in the pane's shell, only if the shell is idle. */
 export function runInPane(ctx: SegmentContext, command: string) {
   if (!ctx.paneId || (ctx.meta?.proc && !ctx.meta.proc.isShell)) return;
