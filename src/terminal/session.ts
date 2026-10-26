@@ -6,6 +6,7 @@ import { WebLinksAddon } from "@xterm/addon-web-links";
 import { WebglAddon } from "@xterm/addon-webgl";
 import { LigaturesAddon } from "@xterm/addon-ligatures";
 import { SerializeAddon } from "@xterm/addon-serialize";
+import { ImageAddon } from "@xterm/addon-image";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import "@xterm/xterm/css/xterm.css";
 import * as pty from "../ipc/pty";
@@ -35,6 +36,10 @@ export interface TerminalSettings {
   wordSeparators: string;
   /** The background shows through (window opacity, blur, image). */
   transparent: boolean;
+  images: boolean;
+  maskSecrets: boolean;
+  screenReader: boolean;
+  minimumContrast: number;
   highlight: HighlightRule[];
   triggers: TriggerRule[];
   padding: number;
@@ -191,6 +196,8 @@ export class TerminalSession {
       macOptionIsMeta: s.optionAsMeta === "both",
       wordSeparator: s.wordSeparators,
       allowTransparency: s.transparent,
+      screenReaderMode: s.screenReader,
+      minimumContrastRatio: s.minimumContrast,
       theme: s.transparent ? { ...s.theme, background: "#00000000" } : s.theme,
     };
   }
@@ -204,6 +211,7 @@ export class TerminalSession {
       this.opened = true;
       this.attachWebgl();
       this.syncLigatures();
+      this.syncImages();
     }
     this.fit();
     if (!this.started) void this.start();
@@ -287,6 +295,19 @@ export class TerminalSession {
     this.term.focus();
   }
 
+  private images: ImageAddon | null = null;
+
+  private syncImages() {
+    if (!this.opened) return;
+    if (this.settings.images && !this.images) {
+      this.images = new ImageAddon({ sixelSupport: true, iipSupport: true, storageLimit: 64 });
+      this.term.loadAddon(this.images);
+    } else if (!this.settings.images && this.images) {
+      this.images.dispose();
+      this.images = null;
+    }
+  }
+
   private syncLigatures() {
     if (!this.opened) return;
     if (this.settings.ligatures && !this.ligatures) {
@@ -307,7 +328,8 @@ export class TerminalSession {
       settings.promptMarks !== this.settings.promptMarks ||
       settings.blockSeparators !== this.settings.blockSeparators;
     this.settings = settings;
-    this.scanner.setRules(settings);
+    this.scanner.setRules({ ...settings, maskSecrets: settings.maskSecrets });
+    this.syncImages();
     if (marksChanged) this.commands.refreshDecorations();
     Object.assign(this.term.options, this.xtermOptions(settings));
     this.syncLigatures();

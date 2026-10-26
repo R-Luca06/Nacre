@@ -1,5 +1,12 @@
 import { expect, test } from "vitest";
-import { resolveColor } from "./scanner";
+import { findSecrets, resolveColor } from "./scanner";
+
+test("secrets", () => {
+  const key = "sk-ant-api03-" + "a".repeat(40);
+  expect(findSecrets(`export KEY=${key} done`)).toEqual([[11, 11 + key.length]]);
+  expect(findSecrets("AKIAIOSFODNN7EXAMPLE and ghp_" + "x".repeat(36))).toHaveLength(2);
+  expect(findSecrets("nothing secret here, sk-short")).toEqual([]);
+});
 import { normalizeConfig } from "../config/schema";
 
 test("colors", () => {

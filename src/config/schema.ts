@@ -65,6 +65,13 @@ export const defaults = {
     paste_warning: true,
     bell: "visual" as "none" | "visual" | "sound" | "notify",
     prompt_marks: true,
+    /** Sixel and iTerm2 inline images. */
+    images: true,
+    /** Hide API keys, tokens and private keys in output (copying still gets the text). */
+    mask_secrets: true,
+    screen_reader: false,
+    /** 1 = off; 4.5 meets WCAG AA. */
+    minimum_contrast: 1,
     /** Characters that end a word on double-click; URLs, paths and emails stay whole. */
     word_separators: " ()[]{}',\"`<>|;",
     block_separators: false,
@@ -168,6 +175,7 @@ const rules: Record<string, Rule> = {
   "terminal.option_as_meta": { enum: ["none", "left", "right", "both"] },
   "terminal.bell": { enum: ["none", "visual", "sound", "notify"] },
   "terminal.notify_after": { min: 0, max: 86400 },
+  "terminal.minimum_contrast": { min: 1, max: 21 },
   "claude.context_warn": { min: 1, max: 100 },
   "claude.context_danger": { min: 1, max: 100 },
   "claude.context_alert": { min: 1, max: 100 },

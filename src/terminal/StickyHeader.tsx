@@ -12,8 +12,9 @@ export function StickyHeader({ session }: { session: TerminalSession }) {
       const buf = session.term.buffer.active;
       const top = buf.viewportY;
       const b = session.commands.blockAt(top);
-      // Only when the prompt line itself has scrolled out of view.
-      const show = b && b.output && b.prompt.line < top && (!b.end || b.end.line > top);
+      // Only while browsing back through output whose prompt is out of view.
+      const show =
+        top < buf.baseY && b && b.output && b.prompt.line < top && (!b.end || b.end.line > top);
       setBlock(show ? b : null);
     };
     const a = session.term.onScroll(update);

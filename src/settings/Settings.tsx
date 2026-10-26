@@ -265,6 +265,16 @@ function Terminal() {
         )}
       />
       <Toggle path={["terminal", "prompt_marks"]} label={t("Command marks")} />
+      <Toggle path={["terminal", "images"]} label={t("Inline images")} />
+      <Toggle path={["terminal", "mask_secrets"]} label={t("Hide secrets")} />
+      <Toggle path={["terminal", "screen_reader"]} label={t("Screen reader")} />
+      <NumberField
+        path={["terminal", "minimum_contrast"]}
+        label={t("Minimum contrast")}
+        min={1}
+        max={21}
+        step={0.5}
+      />
       <Toggle path={["terminal", "block_separators"]} label={t("Block separators")} />
       <NumberField
         path={["terminal", "notify_after"]}
