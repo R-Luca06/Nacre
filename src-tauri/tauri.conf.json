@@ -39,6 +39,9 @@
     }
   },
   "plugins": {
+    "opener": {
+      "requireLiteralLeadingDot": false
+    },
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEI3MEU2ODI2NEQxOTFCMjgKUldRb0d4bE5KbWdPdHg0NzJXRVhYa0NRNTdJd2paYm5xV3NKcWlkaytNU2svSFArejVKdTFXdzEK",
       "endpoints": ["https://github.com/R-Luca06/Nacre/releases/latest/download/latest.json"]

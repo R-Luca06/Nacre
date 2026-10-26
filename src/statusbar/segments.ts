@@ -47,12 +47,14 @@ export interface SegmentContext {
   config: Config;
 }
 
-/** Ids that expand to several segments. */
+/** Ids that expand to several segments. Duplicates are dropped. */
 const GROUPS: Record<string, string[]> = {
   claude: ["claude.state", "claude.model", "claude.context", "claude.cost"],
 };
 
-export const expandSegments = (ids: string[]) => ids.flatMap((id) => GROUPS[id] ?? [id]);
+export const expandSegments = (ids: string[]) => [
+  ...new Set(ids.flatMap((id) => GROUPS[id] ?? [id])),
+];
 
 export interface SegmentDef {
   id: string;
