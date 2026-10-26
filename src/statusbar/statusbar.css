@@ -12,6 +12,11 @@
   overflow: hidden;
 }
 
+/* Without a center zone, the left one takes all the room the right one leaves. */
+.statusbar.no-center {
+  grid-template-columns: minmax(0, 1fr) 0 auto;
+}
+
 .statusbar.bottom {
   border-top: 1px solid var(--line);
 }
@@ -162,6 +167,63 @@
   background: currentColor;
 }
 
+/* Only warn and danger are colored: a calm gauge should not look like an alert. */
 .seg.normal .gauge > span {
-  background: var(--accent);
+  background: var(--text);
+}
+
+.statusbar.gauge-none .gauge {
+  display: none;
+}
+
+.statusbar.gauge-bold .gauge {
+  width: 56px;
+  height: 7px;
+  border-radius: 4px;
+}
+
+.statusbar.gauge-bold .gauge > span {
+  border-radius: 4px;
+}
+
+.statusbar.gauge-bold .seg {
+  gap: 7px;
+}
+
+/* comfortable: taller, larger text, more room between segments */
+.statusbar.comfortable {
+  height: 32px;
+  padding: 0 14px;
+  font-size: 12px;
+}
+
+.statusbar.comfortable.pane-bar {
+  height: 26px;
+}
+
+.statusbar.comfortable .zone {
+  gap: 26px;
+}
+
+.statusbar.comfortable.simple .zone,
+.statusbar.comfortable.powerline .zone {
+  gap: 0;
+}
+
+.statusbar.comfortable.simple .seg {
+  padding: 0 14px;
+}
+
+.statusbar.comfortable.pills .zone {
+  gap: 8px;
+}
+
+.statusbar.comfortable.pills .seg {
+  height: 24px;
+  padding: 0 12px;
+  border-radius: 12px;
+}
+
+.statusbar.comfortable.powerline {
+  padding: 0;
 }

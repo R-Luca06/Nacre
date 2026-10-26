@@ -34,6 +34,7 @@ export interface TerminalSettings {
   ligatures: boolean;
   promptMarks: boolean;
   blockSeparators: boolean;
+  smoothScroll: boolean;
   wordSeparators: string;
   /** The background shows through (window opacity, blur, image). */
   transparent: boolean;
@@ -46,6 +47,13 @@ export interface TerminalSettings {
   triggers: TriggerRule[];
   padding: number;
   theme: ITheme;
+}
+
+/** The part of xterm's internal scrollable element used for pixel scrolling. */
+interface PixelScrollable {
+  onScroll?: (fn: () => void) => void;
+  getScrollPosition?: () => { scrollTop: number };
+  setScrollPosition?: (p: { scrollTop: number }) => void;
 }
 
 export interface SessionEvents {
@@ -216,6 +224,7 @@ export class TerminalSession {
       this.term.open(this.host);
       this.opened = true;
       this.attachWebgl();
+      this.trackPixelScroll();
       this.syncLigatures();
       this.syncImages();
     }
@@ -233,6 +242,54 @@ export class TerminalSession {
     } catch {
       this.webgl = null;
     }
+  }
+
+  private screen: HTMLElement | null = null;
+
+  /**
+   * xterm keeps the scroll position in pixels but draws whole rows, so a slow trackpad
+   * moves the text in 20px jumps. Shifting the screen by the remainder (at most half a
+   * row, into the padding) makes it follow the finger.
+   */
+  private trackPixelScroll() {
+    // Private API: without it, scrolling stays by rows.
+    const core = (this.term as unknown as { _core?: Record<string, unknown> })._core;
+    const scrollable = (core?._viewport as { _scrollableElement?: PixelScrollable } | undefined)
+      ?._scrollableElement;
+    this.screen = this.term.element?.querySelector<HTMLElement>(".xterm-screen") ?? null;
+    const position = scrollable?.getScrollPosition?.bind(scrollable);
+    const setPosition = scrollable?.setScrollPosition?.bind(scrollable);
+    if (!scrollable?.onScroll || !position || !setPosition || !this.screen) return;
+    const rowHeight = () => (this.screen ? this.screen.offsetHeight / this.term.rows : 0);
+    // Wheel, trackpad or scrollbar drag; xterm also scrolls itself when it jumps rows.
+    let gesture = 0;
+    const mark = (e: Event) => {
+      if (e.type === "wheel" || (e as PointerEvent).buttons) gesture = performance.now();
+    };
+    this.term.element?.addEventListener("wheel", mark, { capture: true, passive: true });
+    this.term.element?.addEventListener("pointermove", mark, { capture: true, passive: true });
+    scrollable.onScroll(() => {
+      if (!this.settings.smoothScroll) return;
+      const h = rowHeight();
+      // Relative to the row actually drawn.
+      const rest = position().scrollTop - this.term.buffer.active.viewportY * h;
+      this.setScreenShift(h && Math.abs(rest) <= h / 2 ? rest : 0);
+    });
+    // Rows moved by the program (output, typing, jumps) can leave xterm a few pixels off
+    // the row it draws; the next gesture would start from there. Put it back on the row.
+    this.term.onScroll(() =>
+      requestAnimationFrame(() => {
+        if (performance.now() - gesture < 100) return;
+        this.setScreenShift(0);
+        const top = this.term.buffer.active.viewportY * rowHeight();
+        if (Math.abs(position().scrollTop - top) >= 0.5) setPosition({ scrollTop: top });
+      }),
+    );
+  }
+
+  private setScreenShift(px: number) {
+    if (this.screen)
+      this.screen.style.transform = Math.abs(px) >= 0.5 ? `translateY(${-px}px)` : "";
   }
 
   private detachWebgl() {
@@ -391,6 +448,8 @@ export class TerminalSession {
     Object.assign(this.term.options, this.xtermOptions(settings));
     this.syncLigatures();
     this.host.style.padding = `${settings.padding}px`;
+    // Row height or the setting may have changed: drop any shift until the next scroll.
+    this.setScreenShift(0);
     this.fit();
   }
 

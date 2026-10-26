@@ -3,11 +3,13 @@ import { Asterisk, CornerDownLeft, X } from "lucide-react";
 import { t } from "../i18n";
 import { useWorkspace } from "../store/workspace";
 import { getSession } from "../terminal/registry";
-import { isDangerousPaste } from "../app/paths";
+import { homeDir, isDangerousPaste, tildify } from "../app/paths";
 import { focusPane } from "../app/ops";
 import { formatCombo } from "../keybindings/combo";
-import { type AiCall, ask, extractCommand } from "./client";
+import { useConfig } from "../store/config";
+import { type AiCall, type AiStep, ask, extractCommand } from "./client";
 import {
+  COMMAND_SEARCH,
   COMMAND_SYSTEM,
   EXPLAIN_SYSTEM,
   FIX_SYSTEM,
@@ -68,9 +70,27 @@ function useAnswer() {
   return { answer, setAnswer, busy, error, start };
 }
 
-/** ⌘K: describe what you want, review the command, then run it. */
+/** What the model is looking at, in a few words. */
+function stepLabel({ name, input }: AiStep): string {
+  const str = (k: string) => (typeof input[k] === "string" ? (input[k] as string) : "");
+  const home = homeDir();
+  const short = (s: string) => (home ? s.replaceAll(home + "/", "~/") : s);
+  if (name === "Read") return t("Reading {path}", { path: tildify(str("file_path")) });
+  if (name === "Glob")
+    return t("Looking in {path}", {
+      path: [tildify(str("path")), str("pattern")].filter(Boolean).join("/"),
+    });
+  if (name === "Grep") return t("Searching for {name}", { name: str("pattern") });
+  const cmd = str("command");
+  const spot = /^mdfind\b.*?-name\s+("[^"]*"|'[^']*'|\S+)/.exec(cmd);
+  if (spot) return t("Searching for {name}", { name: spot[1].replace(/^["']|["']$/g, "") });
+  return `$ ${short(cmd)}`;
+}
+
+/** ⌘K: describe what you want, review the command, then insert or run it. */
 function CommandMode({ paneId }: { paneId: string }) {
   const [query, setQuery] = useState("");
+  const [step, setStep] = useState("");
   const { answer, setAnswer, busy, error, start } = useAnswer();
   const input = useRef<HTMLInputElement>(null);
   const asked = useRef("");
@@ -81,12 +101,17 @@ function CommandMode({ paneId }: { paneId: string }) {
   const submit = () => {
     if (!query.trim()) return;
     const ctx = paneContext(paneId);
+    // Only `claude -p` can look at files.
+    const search = useConfig.getState().config.ai.provider === "claude-code";
+    setStep("");
     start(
       ask(
         {
-          system: COMMAND_SYSTEM,
+          system: search ? `${COMMAND_SYSTEM}\n\n${COMMAND_SEARCH}` : COMMAND_SYSTEM,
           prompt: `${describeContext(ctx)}\n\nRequest: ${query}`,
           cwd: ctx.cwd,
+          search,
+          onStep: (s) => setStep(stepLabel(s)),
         },
         setAnswer,
       ),
@@ -108,7 +133,7 @@ function CommandMode({ paneId }: { paneId: string }) {
           document.activeElement !== input.current
         ) {
           e.preventDefault();
-          insert(paneId, command, !e.metaKey);
+          insert(paneId, command, e.metaKey);
         }
       }}
     >
@@ -124,9 +149,9 @@ function CommandMode({ paneId }: { paneId: string }) {
             if (e.key === "Enter") {
               e.preventDefault();
               e.stopPropagation();
-              // Enter asks; Enter again (same text) runs, ⌘Enter inserts.
+              // Enter asks; Enter again (same text) inserts, ⌘Enter runs.
               if (command && !busy && !impossible && query === asked.current) {
-                insert(paneId, command, !e.metaKey);
+                insert(paneId, command, e.metaKey);
               } else {
                 asked.current = query;
                 submit();
@@ -139,6 +164,11 @@ function CommandMode({ paneId }: { paneId: string }) {
           <X size={14} strokeWidth={1.5} />
         </button>
       </div>
+      {busy && !command && (
+        <div className="ai-status">
+          <span className="ai-step">{step || t("Thinking…")}</span>
+        </div>
+      )}
       {(command || error) && (
         <div className={`ai-proposal${risky ? " risky" : ""}${impossible ? " impossible" : ""}`}>
           {error ? (
@@ -149,11 +179,11 @@ function CommandMode({ paneId }: { paneId: string }) {
               {!busy && !impossible && (
                 <span className="ai-actions">
                   {risky && <span className="ai-warn">{t("Check before running")}</span>}
-                  <button className="btn" onClick={() => insert(paneId, command, false)}>
-                    {t("Insert")} <span className="kbd">{formatCombo("cmd+enter")}</span>
+                  <button className="btn" onClick={() => insert(paneId, command, true)}>
+                    {t("Run")} <span className="kbd">{formatCombo("cmd+enter")}</span>
                   </button>
-                  <button className="btn primary" onClick={() => insert(paneId, command, true)}>
-                    {t("Run")} <CornerDownLeft size={12} strokeWidth={1.5} />
+                  <button className="btn primary" onClick={() => insert(paneId, command, false)}>
+                    {t("Insert")} <CornerDownLeft size={12} strokeWidth={1.5} />
                   </button>
                 </span>
               )}
@@ -205,7 +235,7 @@ function AnswerMode({ paneId, mode, blockId }: AiRequestState) {
       onKeyDown={(e) => {
         if (e.key === "Escape") close(paneId);
         if (e.key === "Enter" && fix && !fix.startsWith("#") && !busy)
-          insert(paneId, fix, !e.metaKey);
+          insert(paneId, fix, e.metaKey);
       }}
     >
       <div className="ai-row">
@@ -243,11 +273,11 @@ function AnswerMode({ paneId, mode, blockId }: AiRequestState) {
       </div>
       {mode === "fix" && fix && !fix.startsWith("#") && !busy && (
         <div className="ai-actions end">
-          <button className="btn" onClick={() => insert(paneId, fix, false)}>
-            {t("Insert")}
+          <button className="btn" onClick={() => insert(paneId, fix, true)}>
+            {t("Run")} <span className="kbd">{formatCombo("cmd+enter")}</span>
           </button>
-          <button className="btn primary" onClick={() => insert(paneId, fix, true)}>
-            {t("Run")} <CornerDownLeft size={12} strokeWidth={1.5} />
+          <button className="btn primary" onClick={() => insert(paneId, fix, false)}>
+            {t("Insert")} <CornerDownLeft size={12} strokeWidth={1.5} />
           </button>
         </div>
       )}

@@ -14,6 +14,7 @@ All of them can be changed in Settings → Shortcuts or under `[keys]`.
 | ⌘N / ⇧⌘W              | New window / close window                                 |
 | ⌘F · ⇧⌘K              | Find · clear                                              |
 | ⌘↑ / ⌘↓               | Previous / next prompt                                    |
+| ⌘⌫ · ⌘← / ⌘→          | Delete the line · line start / end                        |
 | ⇧⌘O                   | Copy last output                                          |
 | ⇧⌘U · ⇧⌘X             | Pick from screen (hints) · copy mode                      |
 | ⇧⌘P                   | Command palette                                           |

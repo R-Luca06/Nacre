@@ -343,6 +343,10 @@ svg {
   bottom: 20px;
 }
 
+.pane.with-bar.comfortable-bar .term-host {
+  bottom: 26px;
+}
+
 .toast {
   position: absolute;
   z-index: 16;

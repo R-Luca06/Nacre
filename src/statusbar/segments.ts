@@ -12,7 +12,6 @@ import {
   Cpu,
   Asterisk,
   Folder,
-  Gauge,
   GitBranch,
   MemoryStick,
   Network,
@@ -50,6 +49,7 @@ export interface SegmentContext {
 /** Ids that expand to several segments. Duplicates are dropped. */
 const GROUPS: Record<string, string[]> = {
   claude: ["claude.state", "claude.model", "claude.context", "claude.cost"],
+  "claude.limits": ["claude.limits.5h", "claude.limits.7d"],
 };
 
 export const expandSegments = (ids: string[]) => [
@@ -398,23 +398,48 @@ registerSegment({
   click: () => openDashboard(),
 });
 
-registerSegment({
-  id: "claude.limits",
-  deps: claudeDeps,
-  compute: ({ claude: c }) => {
-    const r = c?.rateLimits;
-    if (!r || (r.fiveHourPct == null && r.sevenDayPct == null)) return null;
-    const parts: string[] = [];
-    if (r.fiveHourPct != null) parts.push(`5h ${Math.round(r.fiveHourPct)}%`);
-    if (r.sevenDayPct != null) parts.push(`7d ${Math.round(r.sevenDayPct)}%`);
-    const max = Math.max(r.fiveHourPct ?? 0, r.sevenDayPct ?? 0);
-    return {
-      text: parts.join(" · "),
-      icon: Gauge,
-      level: max >= 90 ? "danger" : max >= 75 ? "warn" : "normal",
-    };
-  },
-});
+/** `2h14`, `3d 4h`, `12 min`: time left until `at`. */
+function timeLeft(at: number): string {
+  const min = Math.max(1, Math.round((at - Date.now()) / 60000));
+  if (min < 60) return t("{n} min", { n: min });
+  const h = Math.floor(min / 60);
+  if (h < 24) return `${h}h${String(min % 60).padStart(2, "0")}`;
+  return t("{d}d {h}h", { d: Math.floor(h / 24), h: h % 24 });
+}
+
+function limitSegment(id: string, label: string, window: "fiveHour" | "sevenDay") {
+  registerSegment({
+    id,
+    // The reset countdown moves on its own.
+    interval: 30000,
+    deps: claudeDeps,
+    compute: ({ claude: c, config }) => {
+      const r = c?.rateLimits;
+      const pct = r?.[`${window}Pct`];
+      if (pct == null) return null;
+      const raw = r?.[`${window}ResetsAt`];
+      // Claude Code sends seconds; accept milliseconds too.
+      const at = raw ? (raw < 1e12 ? raw * 1000 : raw) : null;
+      const left = at && at > Date.now() ? timeLeft(at) : null;
+      const when = at
+        ? new Date(at).toLocaleString(undefined, {
+            weekday: window === "sevenDay" ? "long" : undefined,
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : null;
+      return {
+        text: `${t(label)} ${Math.round(pct)}%${config.statusbar.limit_resets && left ? ` · ${left}` : ""}`,
+        gauge: Math.min(1, pct / 100),
+        level: pct >= 90 ? "danger" : pct >= 75 ? "warn" : "normal",
+        title: when ? t("Resets {when} (in {left})", { when, left: left ?? "0" }) : undefined,
+      };
+    },
+  });
+}
+
+limitSegment("claude.limits.5h", "5h", "fiveHour");
+limitSegment("claude.limits.7d", "7d", "sevenDay");
 
 registerSegment({
   id: "claude.duration",

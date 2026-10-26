@@ -59,7 +59,7 @@ La connexion ajoute des hooks dans `~/.claude/settings.json` (avec une sauvegard
 
 ![Expliquer l'erreur sur un port déjà utilisé](docs/media/explain.png)
 
-Ça passe par `claude -p` avec ton abonnement Claude Code, sans outils. Une clé API Anthropic (rangée dans le Trousseau) marche aussi.
+Ça passe par `claude -p` avec ton abonnement Claude Code. ⌘K peut chercher et lire des fichiers pour trouver le bon chemin ; rien d'autre ne s'exécute sans toi. Une clé API Anthropic (rangée dans le Trousseau) marche aussi.
 
 ## Onglets et splits
 

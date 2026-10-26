@@ -85,7 +85,9 @@ export function StatusBar({ paneId }: { paneId?: string }) {
   );
   const sb = config.statusbar;
   return (
-    <div className={`statusbar ${sb.style} ${sb.position}${paneId ? " pane-bar" : ""}`}>
+    <div
+      className={`statusbar ${sb.style} ${sb.position} ${sb.density} gauge-${sb.gauge}${sb.center.length ? "" : " no-center"}${paneId ? " pane-bar" : ""}`}
+    >
       <Zone ids={sb.left} ctx={ctx} side="left" />
       <Zone ids={sb.center} ctx={ctx} side="center" />
       <Zone ids={sb.right} ctx={ctx} side="right" />

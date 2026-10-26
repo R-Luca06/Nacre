@@ -8,4 +8,7 @@ test("extractCommand", async () => {
   expect(extractCommand("```sh\n$ git status\n```")).toBe("git status");
   expect(extractCommand("Run this:\n```bash\nnpm i\n```\nthen go")).toBe("npm i");
   expect(extractCommand("`pwd`")).toBe("pwd");
+  expect(extractCommand("Voici la commande :\n\ncd ~/app && ./run.command")).toBe(
+    "cd ~/app && ./run.command",
+  );
 });

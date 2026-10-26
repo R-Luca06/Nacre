@@ -48,7 +48,7 @@ Connect once from Settings → Claude. It adds hooks to `~/.claude/settings.json
 
 ![Explain Error on a port already in use](docs/media/explain.png)
 
-It runs `claude -p` with your Claude Code login and no tools, so nothing executes without you. An Anthropic API key, kept in the Keychain, works too.
+It runs `claude -p` with your Claude Code login. ⌘K can look for files and read them to find the right path; nothing else runs, and nothing executes without you. An Anthropic API key, kept in the Keychain, works too.
 
 ## Tabs and splits
 

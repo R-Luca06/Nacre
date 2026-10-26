@@ -77,6 +77,19 @@ pub fn build_command(
     for key in STRIPPED {
         cmd.env_remove(key);
     }
+    // Started by `npm run` (dev): drop what npm adds, EDITOR=vi included, which turns
+    // zsh's line editor into vi mode.
+    if std::env::var_os("npm_lifecycle_event").is_some() {
+        for (key, _) in std::env::vars_os() {
+            let key = key.to_string_lossy();
+            if key.starts_with("npm_") || key == "INIT_CWD" {
+                cmd.env_remove(&*key);
+            }
+        }
+        if std::env::var("EDITOR").as_deref() == Ok("vi") {
+            cmd.env_remove("EDITOR");
+        }
+    }
     cmd.env("TERM", "xterm-256color");
     cmd.env("COLORTERM", "truecolor");
     cmd.env("TERM_PROGRAM", "Nacre");

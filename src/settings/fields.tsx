@@ -94,21 +94,16 @@ export function Select({
   );
 }
 
-export function NumberField({
-  path,
-  label,
-  min,
-  max,
-  step = 1,
-  unit,
-}: {
+interface NumProps {
   path: Path;
-  label: string;
   min: number;
   max: number;
   step?: number;
   unit?: string;
-}) {
+}
+
+/** A number input and its unit, for rows holding several. */
+export function NumInput({ path, min, max, step = 1, unit }: NumProps) {
   const [v, set] = useSetting<number>(path);
   const commit = (el: HTMLInputElement) => {
     const n = Number(el.value);
@@ -117,7 +112,7 @@ export function NumberField({
     } else el.value = String(v);
   };
   return (
-    <Row label={label}>
+    <>
       <input
         key={v}
         className="num"
@@ -130,6 +125,18 @@ export function NumberField({
         onKeyDown={(e) => e.key === "Enter" && commit(e.currentTarget)}
       />
       {unit && <span className="unit">{unit}</span>}
+    </>
+  );
+}
+
+export function NumberField({
+  label,
+  hint,
+  ...props
+}: NumProps & { label: string; hint?: string }) {
+  return (
+    <Row label={label} hint={hint}>
+      <NumInput {...props} />
     </Row>
   );
 }

@@ -103,6 +103,7 @@ export function terminalSettings(s = useConfig.getState(), theme?: Theme): Termi
     ligatures: c.font.ligatures,
     promptMarks: c.terminal.prompt_marks,
     blockSeparators: c.terminal.block_separators,
+    smoothScroll: c.terminal.smooth_scroll,
     wordSeparators: c.terminal.word_separators,
     transparent: seeThrough(c),
     images: c.terminal.images,

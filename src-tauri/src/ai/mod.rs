@@ -29,6 +29,9 @@ pub struct AiRequest {
     /// Earlier turns for chat: `[{"role": "user"|"assistant", "text": "..."}]`.
     #[serde(default)]
     pub history: Vec<Value>,
+    /// Lets `claude -p` look for files (read-only tools) before answering.
+    #[serde(default)]
+    pub search: bool,
 }
 
 #[derive(Default, Clone)]
@@ -149,12 +152,24 @@ impl AiRuns {
         let bin = claude_binary(req.claude_path.as_deref())
             .ok_or("Claude Code not found. Install it or set ai.claude_path.")?;
         let mut cmd = Command::new(bin);
+        cmd.args(["-p", "--model", &req.model]);
+        if req.search {
+            // Read-only: anything not listed here is refused, never asked.
+            let home = std::env::var("HOME").unwrap_or_default();
+            cmd.args([
+                "--tools",
+                "Read,Glob,Grep,Bash",
+                "--allowedTools",
+                "Read,Glob,Grep,Bash(mdfind *),Bash(ls *),Bash(head *),Bash(file *)",
+                "--permission-mode",
+                "dontAsk",
+                "--add-dir",
+                &home,
+            ]);
+        } else {
+            cmd.args(["--tools", ""]);
+        }
         cmd.args([
-            "-p",
-            "--model",
-            &req.model,
-            "--tools",
-            "",
             "--no-session-persistence",
             "--system-prompt",
             &req.system,
@@ -196,10 +211,25 @@ impl AiRuns {
             match v["type"].as_str() {
                 Some("stream_event") => {
                     let ev = &v["event"];
+                    // Each turn starts over: only the last one is the answer.
+                    if ev["type"] == "message_start" && !text.is_empty() {
+                        text.clear();
+                        send(ch, json!({ "type": "reset" }));
+                    }
                     if ev["type"] == "content_block_delta" && ev["delta"]["type"] == "text_delta" {
                         let t = ev["delta"]["text"].as_str().unwrap_or("");
                         text.push_str(t);
                         send(ch, json!({ "type": "delta", "text": t }));
+                    }
+                }
+                Some("assistant") => {
+                    for c in v["message"]["content"].as_array().into_iter().flatten() {
+                        if c["type"] == "tool_use" {
+                            send(
+                                ch,
+                                json!({ "type": "tool", "name": c["name"], "input": c["input"] }),
+                            );
+                        }
                     }
                 }
                 Some("result") => {
@@ -374,6 +404,7 @@ mod tests {
             provider: "claude-code".into(),
             cwd: None,
             claude_path: None,
+            search: false,
             history: vec![
                 json!({"role": "user", "text": "hi"}),
                 json!({"role": "assistant", "text": "hello"}),

@@ -13,4 +13,4 @@ Connecting adds hooks to `~/.claude/settings.json` (a backup is written next to 
 
 Without hooks, Nacre still finds sessions by watching for the `claude` process and reading its transcript.
 
-The AI features (⌘K, explain, fix, chat) run `claude -p` with your Claude Code login, with tools disabled. Settings → AI can switch them to an Anthropic API key kept in the macOS Keychain.
+The AI features (⌘K, explain, fix, chat) run `claude -p` with your Claude Code login, with tools disabled. ⌘K is the exception: it may search and read files (Read, Glob, Grep, and `mdfind`, `ls`, `head`, `file` in Bash) to find the right path; anything else is refused. Settings → AI can switch them to an Anthropic API key kept in the macOS Keychain.

@@ -75,8 +75,10 @@ function PaneView(props: {
   const trail = useConfig((s) => s.config.cursor.trail);
   const recording = useWorkspace((s) => !!s.panes[id]?.recording);
   const dim = useConfig((s) => s.config.window.dim_inactive);
-  const paneBar = useConfig(
-    (s) => s.config.statusbar.enabled && s.config.statusbar.scope === "pane",
+  const paneBar = useConfig((s) =>
+    s.config.statusbar.enabled && s.config.statusbar.scope === "pane"
+      ? s.config.statusbar.density
+      : null,
   );
 
   useLayoutEffect(() => {
@@ -97,7 +99,7 @@ function PaneView(props: {
     <div
       ref={ref}
       data-pane={id}
-      className={`pane${showActive && !active ? " inactive" : ""}${paneBar ? " with-bar" : ""}`}
+      className={`pane${showActive && !active ? " inactive" : ""}${paneBar ? ` with-bar ${paneBar}-bar` : ""}`}
       style={{
         ...paneStyle(rect),
         display: visible ? undefined : "none",

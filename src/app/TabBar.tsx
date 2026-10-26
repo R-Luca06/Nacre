@@ -216,8 +216,13 @@ function RenameField({ tab, initial }: { tab: Tab; initial: string }) {
   const [value, setValue] = useState(initial);
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    ref.current?.focus();
-    ref.current?.select();
+    // Selecting the tab focuses its terminal on the next frame; take focus after that,
+    // or the blur closes the field right away.
+    const frame = requestAnimationFrame(() => {
+      ref.current?.focus();
+      ref.current?.select();
+    });
+    return () => cancelAnimationFrame(frame);
   }, []);
   const done = (commit: boolean) => {
     if (commit) ops.renameTab(tab.id, value === initial && !tab.title ? "" : value);

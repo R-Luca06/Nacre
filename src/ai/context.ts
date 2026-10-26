@@ -47,6 +47,14 @@ Reply with the command only: no explanation, no markdown fences, no leading "$".
 Prefer portable, safe flags. If several steps are needed, join them with && on one line.
 If the request is impossible or unclear, reply with a single line starting with "#" that says why.`;
 
+/** Appended to COMMAND_SYSTEM when the model can look at files (`claude -p`). */
+export const COMMAND_SEARCH = `You can look at the user's files, read-only. When the request names a file, folder, script or project you have not seen, find it first:
+- \`mdfind -name <word> -onlyin ~\` (Spotlight, instant). Names are often lowercase or hyphenated: "My App" may be my-app. One command per call, no pipes.
+- \`ls\`, Glob and Read for what is inside. Never search the whole disk.
+Before running a script, read its first lines: use the interpreter of its shebang, or run it directly if it is executable. Use absolute paths, or cd into the project first if the script expects it.
+Tools are for looking only: never run the command yourself, the user runs it.
+A few lookups, then the answer. The final reply is still the command only.`;
+
 export const EXPLAIN_SYSTEM = `You explain terminal errors briefly.
 At most 6 short lines:
 what went wrong, then how to fix it. If one command fixes it, end with it in a \`\`\`sh block.`;

@@ -8,7 +8,16 @@ import { activeTab, useWorkspace } from "../store/workspace";
 import { focusPane } from "../app/ops";
 import { segmentIds } from "../statusbar/segments";
 import { connectClaude, disconnectClaude, useInstallStatus } from "../claude/install";
-import { ListField, NumberField, Select, TextField, Toggle, setValue } from "./fields";
+import {
+  ListField,
+  NumInput,
+  NumberField,
+  Row,
+  Select,
+  TextField,
+  Toggle,
+  setValue,
+} from "./fields";
 import { usePlugins } from "../plugins/host";
 import { ThemesSection } from "./ThemesSection";
 import { KeysSection } from "./KeysSection";
@@ -52,6 +61,8 @@ const SEGMENT_LABELS: Record<string, string> = {
   "claude.context": "Claude context",
   "claude.cost": "Claude cost",
   "claude.limits": "Claude limits",
+  "claude.limits.5h": "Claude 5-hour limit",
+  "claude.limits.7d": "Claude weekly limit",
   "claude.duration": "Claude duration",
 };
 
@@ -283,6 +294,7 @@ function Terminal() {
         step={0.5}
       />
       <Toggle path={["terminal", "block_separators"]} label={t("Block separators")} />
+      <Toggle path={["terminal", "smooth_scroll"]} label={t("Smooth scrolling")} />
       <NumberField
         path={["terminal", "notify_after"]}
         label={t("Notify after")}
@@ -296,7 +308,12 @@ function Terminal() {
 
 function StatusBarSection() {
   const custom = useConfig((s) => s.config.statusbar.custom);
-  const choices = ["claude", ...segmentIds(), ...custom.map((c) => `custom:${c.name}`)];
+  const choices = [
+    "claude",
+    "claude.limits",
+    ...segmentIds(),
+    ...custom.map((c) => `custom:${c.name}`),
+  ];
   const labelOf = (id: string) =>
     id.startsWith("custom:") ? id.slice(7) : t(SEGMENT_LABELS[id] ?? id);
   return (
@@ -322,6 +339,17 @@ function StatusBarSection() {
           ["pills", "Pills"],
         )}
       />
+      <Select
+        path={["statusbar", "density"]}
+        label={t("Density")}
+        options={opts(["compact", "Compact"], ["comfortable", "Comfortable"])}
+      />
+      <Select
+        path={["statusbar", "gauge"]}
+        label={t("Gauges")}
+        options={opts(["thin", "Thin"], ["bold", "Bold"], ["none", "None"])}
+      />
+      <Toggle path={["statusbar", "limit_resets"]} label={t("Time until limits reset")} />
       <ListField
         path={["statusbar", "left"]}
         label={t("Left")}
@@ -367,23 +395,16 @@ function ClaudeSection() {
           )}
         </span>
       </div>
-      <NumberField
-        path={["claude", "context_warn"]}
-        label={t("Context warning")}
-        min={1}
-        max={100}
-        unit="%"
-      />
-      <NumberField
-        path={["claude", "context_danger"]}
-        label={t("Context danger")}
-        min={1}
-        max={100}
-        unit="%"
-      />
+      <Row label={t("Context gauge")}>
+        <span className="unit">{t("yellow from")}</span>
+        <NumInput path={["claude", "context_warn"]} min={1} max={100} unit="%" />
+        <span className="unit">{t("red from")}</span>
+        <NumInput path={["claude", "context_danger"]} min={1} max={100} unit="%" />
+      </Row>
       <NumberField
         path={["claude", "context_alert"]}
-        label={t("Context alert")}
+        label={t("Warn at")}
+        hint={t("A message in Nacre, once per session, before auto-compaction.")}
         min={1}
         max={100}
         unit="%"

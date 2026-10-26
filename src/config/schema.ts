@@ -82,6 +82,8 @@ export const defaults = {
     /** Characters that end a word on double-click; URLs, paths and emails stay whole. */
     word_separators: " ()[]{}',\"`<>|;",
     block_separators: false,
+    /** Scroll by the pixel instead of by whole lines. */
+    smooth_scroll: true,
     /** Notify when a command running this many seconds ends out of sight; 0 disables. */
     notify_after: 10,
   },
@@ -90,6 +92,11 @@ export const defaults = {
     position: "bottom" as "bottom" | "top",
     scope: "window" as "window" | "pane",
     style: "minimal" as "minimal" | "simple" | "powerline" | "pills",
+    /** Bars drawn next to percentages (context, limits). */
+    gauge: "thin" as "thin" | "bold" | "none",
+    density: "compact" as "compact" | "comfortable",
+    /** Time left before each Claude limit resets, after its percentage. */
+    limit_resets: false,
     left: ["cwd", "git"],
     center: [] as string[],
     right: ["process", "claude", "time"],
@@ -193,6 +200,8 @@ const rules: Record<string, Rule> = {
   "statusbar.position": { enum: ["bottom", "top"] },
   "statusbar.scope": { enum: ["window", "pane"] },
   "statusbar.style": { enum: ["minimal", "simple", "powerline", "pills"] },
+  "statusbar.gauge": { enum: ["thin", "bold", "none"] },
+  "statusbar.density": { enum: ["compact", "comfortable"] },
   "statusbar.time_format": { enum: ["24h", "24h-seconds", "12h"] },
 };
 

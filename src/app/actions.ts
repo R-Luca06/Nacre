@@ -162,6 +162,15 @@ add("edit.scrollTop", "Scroll to Top", "Edit", ["cmd+home"], () => ops.scroll("t
 add("edit.scrollBottom", "Scroll to Bottom", "Edit", ["cmd+end"], () => ops.scroll("bottom"));
 add("edit.pageUp", "Page Up", "Edit", ["shift+pageup"], () => ops.scroll("pageUp"), true);
 add("edit.pageDown", "Page Down", "Edit", ["shift+pagedown"], () => ops.scroll("pageDown"), true);
+// macOS line editing, sent as the readline keys every shell knows. Text fields keep theirs.
+const lineKey = (seq: string) => () => {
+  const id = activeTab()?.active;
+  if (!id || !(document.activeElement as HTMLElement | null)?.closest(".xterm")) return false;
+  getSession(id)?.send(seq);
+};
+add("edit.deleteLine", "Delete Line", "Edit", ["cmd+backspace"], lineKey("\x15"), true);
+add("edit.lineStart", "Go to Line Start", "Edit", ["cmd+left"], lineKey("\x01"), true);
+add("edit.lineEnd", "Go to Line End", "Edit", ["cmd+right"], lineKey("\x05"), true);
 
 // View
 add("view.zoomIn", "Bigger Text", "View", ["cmd+=", "cmd++", "shift+cmd+="], () => ops.zoomFont(1));

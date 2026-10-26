@@ -41,7 +41,28 @@
 }
 
 .ai-mark.busy {
-  opacity: 0.5;
+  animation: ai-spin 1.2s linear infinite;
+}
+
+@keyframes ai-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ai-status {
+  display: flex;
+  min-width: 0;
+  padding: 8px 12px 8px 36px;
+  border-top: 1px solid var(--line);
+  color: var(--text-dim);
+}
+
+.ai-step {
+  overflow: hidden;
+  font: 12px/1.5 var(--mono-font);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .ai-proposal {
