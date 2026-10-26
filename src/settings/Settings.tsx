@@ -513,51 +513,56 @@ function PluginsSection() {
   );
 }
 
+export function closeSettings() {
+  useWorkspace.getState().setOverlay(null);
+  const tab = activeTab();
+  if (tab) focusPane(tab.active);
+}
+
 export function Settings() {
   const [section, setSection] = useState<SectionId>("appearance");
   const path = useConfig((s) => s.path);
-  const close = () => {
-    useWorkspace.getState().setOverlay(null);
-    const tab = activeTab();
-    if (tab) focusPane(tab.active);
-  };
+  const close = closeSettings;
   return (
-    <div
-      className="settings"
-      onKeyDown={(e) => {
-        if (e.key === "Escape" && !(e.target instanceof HTMLInputElement)) close();
-      }}
-      tabIndex={-1}
-    >
-      <nav className="settings-nav">
-        {SECTIONS.map((s) => (
-          <button
-            key={s.id}
-            className={section === s.id ? "on" : ""}
-            onClick={() => setSection(s.id)}
-          >
-            {t(s.label)}
+    <div className="scrim settings-scrim" onMouseDown={close}>
+      <div
+        className="settings"
+        onMouseDown={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          if (e.key === "Escape" && !(e.target instanceof HTMLInputElement)) close();
+        }}
+        tabIndex={-1}
+      >
+        <nav className="settings-nav">
+          {SECTIONS.map((s) => (
+            <button
+              key={s.id}
+              className={section === s.id ? "on" : ""}
+              onClick={() => setSection(s.id)}
+            >
+              {t(s.label)}
+            </button>
+          ))}
+          <span className="grow" />
+          <button className="settings-file" onClick={() => path && void openPath(path)}>
+            config.toml
           </button>
-        ))}
-        <span className="grow" />
-        <button className="settings-file" onClick={() => path && void openPath(path)}>
-          config.toml
-        </button>
-      </nav>
-      <div className="settings-body">
-        <button className="icon-btn settings-close" onClick={close}>
-          <X size={14} strokeWidth={1.5} />
-        </button>
-        <div className="settings-page">
-          <h2>{t(SECTIONS.find((s) => s.id === section)!.label)}</h2>
-          {section === "general" && <General />}
-          {section === "appearance" && <Appearance />}
-          {section === "terminal" && <Terminal />}
-          {section === "statusbar" && <StatusBarSection />}
-          {section === "claude" && <ClaudeSection />}
-          {section === "ai" && <AiSection />}
-          {section === "keys" && <KeysSection />}
-          {section === "plugins" && <PluginsSection />}
+        </nav>
+        <div className="settings-body">
+          <button className="icon-btn settings-close" onClick={close}>
+            <X size={14} strokeWidth={1.5} />
+          </button>
+          <div className="settings-page">
+            <h2>{t(SECTIONS.find((s) => s.id === section)!.label)}</h2>
+            {section === "general" && <General />}
+            {section === "appearance" && <Appearance />}
+            {section === "terminal" && <Terminal />}
+            {section === "statusbar" && <StatusBarSection />}
+            {section === "claude" && <ClaudeSection />}
+            {section === "ai" && <AiSection />}
+            {section === "keys" && <KeysSection />}
+            {section === "plugins" && <PluginsSection />}
+          </div>
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Pin, Plus, X } from "lucide-react";
+import { Pin, Plus, Settings, X } from "lucide-react";
 import { Menu } from "@tauri-apps/api/menu";
 import { moveTab } from "./moveTab";
 import { type Tab, useWorkspace } from "../store/workspace";
@@ -10,6 +10,7 @@ import { useClaude } from "../claude/store";
 import { allThemes, useConfig } from "../store/config";
 import { tabTitle } from "./titles";
 import * as ops from "./ops";
+import { closeSettings } from "../settings/Settings";
 import "./tabbar.css";
 
 export const TAB_COLORS = ["#E06C75", "#E5C07B", "#98C379", "#7FCFC4", "#7AA2D6", "#C49BD8"];
@@ -18,6 +19,7 @@ export function TabBar({ fullscreen, vertical }: { fullscreen: boolean; vertical
   const width = useConfig((s) => s.config.window.sidebar_width);
   const tabs = useWorkspace((s) => s.tabs);
   const activeTabId = useWorkspace((s) => s.activeTabId);
+  const settingsOpen = useWorkspace((s) => s.overlay?.kind === "settings");
   const listRef = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<{ id: string; dx: number } | null>(null);
   const pos = (ev: { clientX: number; clientY: number }) => (vertical ? ev.clientY : ev.clientX);
@@ -80,6 +82,13 @@ export function TabBar({ fullscreen, vertical }: { fullscreen: boolean; vertical
           <Plus size={14} strokeWidth={1.5} />
         </button>
       </div>
+      <button
+        className={`tab-settings icon-btn${settingsOpen ? " on" : ""}`}
+        title={t("Settings")}
+        onClick={() => (settingsOpen ? closeSettings() : ops.openSettings())}
+      >
+        <Settings size={14} strokeWidth={1.5} />
+      </button>
     </div>
   );
 }

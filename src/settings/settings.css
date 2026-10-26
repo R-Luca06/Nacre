@@ -1,9 +1,18 @@
-.settings {
-  position: absolute;
-  inset: 0;
+.settings-scrim {
   z-index: 25;
+  align-items: center;
+  background: #0006;
+}
+
+.settings {
   display: flex;
+  width: min(900px, calc(100% - 48px));
+  height: min(640px, calc(100% - 48px));
+  border: 1px solid var(--line);
+  border-radius: 8px;
   background: var(--bg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
   outline: none;
   animation: pop var(--fast);
 }

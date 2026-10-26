@@ -182,6 +182,17 @@ html.quake .tabbar {
   background: linear-gradient(180deg, #9ed8cf, #c8c2e8 55%, #e9dcc6);
 }
 
+.tab-settings {
+  flex: none;
+  align-self: center;
+  margin: 0 8px;
+}
+
+.tabbar.vertical .tab-settings {
+  align-self: flex-start;
+  margin: 8px 0 0 4px;
+}
+
 .tabbar.vertical .tab-new {
   align-self: flex-start;
   margin: 4px 0 0 4px;
