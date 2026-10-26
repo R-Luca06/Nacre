@@ -4,8 +4,10 @@ import { useWorkspace } from "../store/workspace";
 import * as ops from "./ops";
 import { connectClaude, disconnectClaude } from "../claude/install";
 import { saveWorkspace } from "./workspaces";
+import { saveLastAsSnippet } from "./snippets";
 import {
   copyOutput,
+  exportScrollback,
   jumpPrompt,
   lastBlockAction,
   rerun,
@@ -114,6 +116,8 @@ add("block.copyOutput", "Copy Last Output", "Edit", ["shift+cmd+o"], () =>
 );
 add("block.selectOutput", "Select Last Output", "Edit", [], () => lastBlockAction(selectOutput));
 add("block.rerun", "Run Last Command Again", "Edit", [], () => lastBlockAction(rerun));
+add("edit.exportText", "Export Scrollback as Text", "Edit", [], () => exportScrollback("text"));
+add("edit.exportHtml", "Export Scrollback as HTML", "Edit", [], () => exportScrollback("html"));
 add("edit.scrollTop", "Scroll to Top", "Edit", ["cmd+home"], () => ops.scroll("top"));
 add("edit.scrollBottom", "Scroll to Bottom", "Edit", ["cmd+end"], () => ops.scroll("bottom"));
 add("edit.pageUp", "Page Up", "Edit", ["shift+pageup"], () => ops.scroll("pageUp"), true);
@@ -123,6 +127,17 @@ add("edit.pageDown", "Page Down", "Edit", ["shift+pagedown"], () => ops.scroll("
 add("view.zoomIn", "Bigger Text", "View", ["cmd+=", "cmd++", "shift+cmd+="], () => ops.zoomFont(1));
 add("view.zoomOut", "Smaller Text", "View", ["cmd+-"], () => ops.zoomFont(-1));
 add("view.zoomReset", "Actual Size", "View", ["cmd+0"], () => ops.zoomFont("reset"));
+// Pickers
+const picker = (mode: "history" | "dirs" | "snippets" | "ssh") => {
+  const o = ws().overlay;
+  ws().setOverlay(o?.kind === "palette" && o.mode === mode ? null : { kind: "palette", mode });
+};
+add("palette.history", "Search History", "App", ["shift+cmd+h"], () => picker("history"));
+add("palette.dirs", "Go to Directory", "App", ["shift+cmd+j"], () => picker("dirs"));
+add("palette.snippets", "Snippets", "App", ["shift+cmd+s"], () => picker("snippets"));
+add("palette.ssh", "SSH Hosts", "App", ["shift+cmd+r"], () => picker("ssh"));
+add("snippet.save", "Save Last Command as Snippet", "App", [], () => saveLastAsSnippet());
+
 // AI in the terminal
 const aiFor = (mode: "command" | "explain" | "summarize" | "fix") => {
   const id = ws().tabs.find((x) => x.id === ws().activeTabId)?.active;

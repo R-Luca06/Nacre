@@ -92,6 +92,9 @@ export function terminalSettings(s = useConfig.getState(), theme?: Theme): Termi
     ligatures: c.font.ligatures,
     promptMarks: c.terminal.prompt_marks,
     blockSeparators: c.terminal.block_separators,
+    wordSeparators: c.terminal.word_separators,
+    highlight: c.highlight,
+    triggers: c.triggers,
     padding: c.window.padding,
     theme: xtermTheme(theme ?? activeTheme(s)),
   };

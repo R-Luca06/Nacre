@@ -72,6 +72,63 @@ pub async fn git_diff(cwd: String, path: String) -> Result<String, String> {
     Ok(diff.unwrap_or_default())
 }
 
+/// Which of `paths` (absolute, or relative to `cwd`) are existing files.
+#[tauri::command]
+pub async fn paths_exist(
+    cwd: Option<String>,
+    paths: Vec<String>,
+) -> Result<Vec<Option<String>>, String> {
+    let home = std::env::var("HOME").unwrap_or_default();
+    Ok(paths
+        .iter()
+        .map(|p| {
+            let expanded = if let Some(rest) = p.strip_prefix("~/") {
+                std::path::PathBuf::from(&home).join(rest)
+            } else if p.starts_with('/') {
+                std::path::PathBuf::from(p)
+            } else {
+                std::path::PathBuf::from(cwd.as_deref().unwrap_or(&home)).join(p)
+            };
+            expanded
+                .is_file()
+                .then(|| expanded.to_string_lossy().into_owned())
+        })
+        .collect())
+}
+
+/// Opens a file at a line with the configured editor command, or the default app.
+#[tauri::command]
+pub async fn open_in_editor(
+    template: String,
+    file: String,
+    line: Option<u32>,
+    col: Option<u32>,
+) -> Result<(), String> {
+    use std::process::Command;
+    if template.trim().is_empty() {
+        Command::new("open")
+            .arg(&file)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+        return Ok(());
+    }
+    let q = crate::pty::env::shell_quote;
+    let cmd = template
+        .replace("{file}", &q(&file))
+        .replace("{line}", &line.unwrap_or(1).to_string())
+        .replace("{col}", &col.unwrap_or(1).to_string());
+    // A login shell finds editors installed in the user's PATH.
+    let shell = crate::pty::env::default_shell();
+    Command::new(shell)
+        .args(["-l", "-c", &cmd])
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .spawn()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 /// Saves a file to ~/Downloads without overwriting; returns its path.
 #[tauri::command]
 pub async fn save_download(name: String, base64: String) -> Result<String, String> {

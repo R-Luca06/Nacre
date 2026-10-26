@@ -11,6 +11,13 @@ import "@xterm/xterm/css/xterm.css";
 import * as pty from "../ipc/pty";
 import { withAlpha } from "../themes/color";
 import { type Block, CommandTracker } from "./blocks";
+import { ClipboardAddon } from "@xterm/addon-clipboard";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { invoke } from "@tauri-apps/api/core";
+import { fileLinkProvider } from "./fileLinks";
+import { LineScanner } from "./scanner";
+import { ANSI_NAMES } from "../themes/types";
+import type { HighlightRule, TriggerRule } from "../config/schema";
 
 export interface TerminalSettings {
   fontFamily: string;
@@ -25,6 +32,9 @@ export interface TerminalSettings {
   ligatures: boolean;
   promptMarks: boolean;
   blockSeparators: boolean;
+  wordSeparators: string;
+  highlight: HighlightRule[];
+  triggers: TriggerRule[];
   padding: number;
   theme: ITheme;
 }
@@ -35,6 +45,10 @@ export interface SessionEvents {
   onInput?: (data: string, session: TerminalSession) => boolean;
   onCwd?: (cwd: string) => void;
   onCommandFinished?: (block: Block) => void;
+  /** Directory used to resolve relative file paths in output. */
+  cwd?: () => string | undefined;
+  openFile?: (file: string, line?: number, col?: number) => void;
+  onTrigger?: (rule: TriggerRule, match: RegExpMatchArray, line: string) => void;
   onTitle?: (title: string) => void;
   onBell?: () => void;
   onOutput?: () => void;
@@ -73,6 +87,7 @@ export class TerminalSession {
   private launch: LaunchOptions;
   private searchListeners = new Set<(index: number, count: number) => void>();
   readonly commands: CommandTracker;
+  private scanner: LineScanner;
   exited: pty.ExitInfo | null = null;
   pid = 0;
 
@@ -107,6 +122,23 @@ export class TerminalSession {
     this.term.loadAddon(unicode);
     this.term.unicode.activeVersion = "11";
     this.term.loadAddon(new WebLinksAddon((e, uri) => this.openLink(e, uri)));
+    // OSC 52: programs may set the clipboard (vim, tmux over SSH); reading it is refused.
+    this.term.loadAddon(
+      new ClipboardAddon(undefined, {
+        readText: () => "",
+        writeText: (_sel, text) => writeText(text),
+      }),
+    );
+    if (events.openFile) {
+      this.term.registerLinkProvider(
+        fileLinkProvider(
+          this.term,
+          () => events.cwd?.(),
+          (cwd, paths) => invoke<(string | null)[]>("paths_exist", { cwd: cwd ?? null, paths }),
+          events.openFile,
+        ),
+      );
+    }
 
     this.term.attachCustomKeyEventHandler((e) => this.handleKey(e));
     this.term.onData((d) => this.input(d));
@@ -117,6 +149,12 @@ export class TerminalSession {
       (b) => this.events.onCommandFinished?.(b),
     );
     this.term.parser.registerOscHandler(133, (data) => this.commands.handle(data));
+    this.scanner = new LineScanner(
+      this.term,
+      () => ANSI_NAMES.map((n) => this.settings.theme[n] ?? ""),
+      (rule, m, line) => this.events.onTrigger?.(rule, m, line),
+    );
+    this.scanner.setRules(settings);
     this.term.parser.registerOscHandler(7, (data) => {
       const cwd = parseOsc7(data);
       if (cwd) this.events.onCwd?.(cwd);
@@ -150,6 +188,7 @@ export class TerminalSession {
       cursorInactiveStyle: "outline" as const,
       scrollback: s.scrollback,
       macOptionIsMeta: s.optionAsMeta === "both",
+      wordSeparator: s.wordSeparators,
       theme: s.theme,
     };
   }
@@ -266,6 +305,7 @@ export class TerminalSession {
       settings.promptMarks !== this.settings.promptMarks ||
       settings.blockSeparators !== this.settings.blockSeparators;
     this.settings = settings;
+    this.scanner.setRules(settings);
     if (marksChanged) this.commands.refreshDecorations();
     Object.assign(this.term.options, this.xtermOptions(settings));
     this.syncLigatures();
@@ -350,6 +390,10 @@ export class TerminalSession {
       excludeAltBuffer: true,
       excludeModes: true,
     });
+  }
+
+  serializeHtml(): string {
+    return this.serializeAddon.serializeAsHTML({ includeGlobalBackground: true });
   }
 
   /** Shows text from a previous run above the new prompt. */

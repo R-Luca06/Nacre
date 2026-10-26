@@ -90,6 +90,7 @@ function PaneView(props: {
   return (
     <div
       ref={ref}
+      data-pane={id}
       className={`pane${showActive && !active ? " inactive" : ""}${paneBar ? " with-bar" : ""}`}
       style={{
         ...paneStyle(rect),

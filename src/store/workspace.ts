@@ -3,6 +3,7 @@ import type { ExitInfo, ProcInfo } from "../ipc/pty";
 import { type LayoutNode, contains } from "../layout/tree";
 import type { LaunchOptions } from "../terminal/session";
 import type { AiRequestState } from "../ai/CommandBar";
+import type { PaletteMode } from "../palette/Palette";
 
 export interface PaneMeta {
   id: string;
@@ -59,7 +60,8 @@ export interface Confirm {
 }
 
 export type Overlay =
-  | { kind: "palette"; mode?: string }
+  | { kind: "palette"; mode?: PaletteMode }
+  | { kind: "snippet"; name: string; template: string; run: boolean }
   | { kind: "confirm"; confirm: Confirm }
   | { kind: "rename"; tabId: string }
   | { kind: "claude"; view?: "sessions" | "history" | "usage" }

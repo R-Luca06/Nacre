@@ -1,6 +1,8 @@
 //! Window/tab/split layout saved continuously and restored at launch.
 //! Each window sends its own state; the file holds all open windows.
 
+pub mod history;
+
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::Mutex;

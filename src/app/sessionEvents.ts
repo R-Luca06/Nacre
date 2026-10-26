@@ -9,7 +9,7 @@ import { useConfig } from "../store/config";
 import { activeTab, tabOfPane, useWorkspace } from "../store/workspace";
 import { getSession } from "../terminal/registry";
 import type { SessionEvents } from "../terminal/session";
-import { ring } from "./bell";
+import { beep, ring } from "./bell";
 import { invoke } from "@tauri-apps/api/core";
 import { fmtMs } from "../terminal/blocks";
 import { closePane, focusPane, lookOf } from "./ops";
@@ -44,9 +44,44 @@ export function sessionEvents(id: string): SessionEvents {
       return false;
     },
     onTitle: (title) => ws().updatePane(id, { oscTitle: title, oscTitleAt: Date.now() }),
-    onCwd: (cwd) => ws().updatePane(id, { cwd, cwdFromOsc: true }),
+    cwd: () => ws().panes[id]?.cwd,
+    onTrigger: (rule, m, line) => {
+      if (rule.action === "notify") {
+        void invoke("notify", { title: t("Trigger"), body: line.trim().slice(0, 200) }).catch(
+          () => {},
+        );
+      } else if (rule.action === "sound") {
+        beep();
+      } else if (rule.action === "command" && rule.command) {
+        const q = (s: string) => `'${s.replace(/'/g, `'\\''`)}'`;
+        const command = rule.command.replace(/\$(\d)/g, (_, n: string) => q(m[Number(n)] ?? ""));
+        void invoke("run_script", {
+          command,
+          cwd: ws().panes[id]?.cwd ?? null,
+          timeout: 30000,
+        }).catch(() => {});
+      }
+    },
+    openFile: (file, line, col) =>
+      void invoke("open_in_editor", {
+        template: useConfig.getState().config.general.editor,
+        file,
+        line: line ?? null,
+        col: col ?? null,
+      }).catch((e) => ws().showToast(String(e), "warn")),
+    onCwd: (cwd) => {
+      if (ws().panes[id]?.cwd !== cwd) void invoke("dirs_visit", { path: cwd }).catch(() => {});
+      ws().updatePane(id, { cwd, cwdFromOsc: true });
+    },
     onCommandFinished: (b) => {
       const duration = (b.finishedAt ?? 0) - (b.startedAt ?? 0);
+      if (b.command) {
+        void invoke("history_add", {
+          command: b.command,
+          cwd: ws().panes[id]?.cwd ?? null,
+          exit: b.exitCode ?? null,
+        }).catch(() => {});
+      }
       ws().updatePane(id, {
         lastCommand: { command: b.command, duration, exitCode: b.exitCode, at: Date.now() },
       });

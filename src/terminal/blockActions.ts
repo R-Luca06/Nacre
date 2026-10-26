@@ -95,6 +95,40 @@ export async function saveImage(s: TerminalSession, b: Block) {
   }
 }
 
+export async function exportScrollback(format: "text" | "html") {
+  const s = activeSession();
+  if (!s) return;
+  let content: string;
+  if (format === "html") {
+    content = `<!doctype html><meta charset="utf-8"><title>Nacre</title>\n${s.serializeHtml()}`;
+  } else {
+    const buf = s.term.buffer.active;
+    const lines: string[] = [];
+    for (let y = 0; y < buf.length; y++) {
+      const line = buf.getLine(y);
+      if (!line) continue;
+      const text = line.translateToString(true);
+      if (line.isWrapped && lines.length) lines[lines.length - 1] += text;
+      else lines.push(text);
+    }
+    content = lines.join("\n").trimEnd() + "\n";
+  }
+  const bytes = new TextEncoder().encode(content);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000)
+    bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  try {
+    const path = await invoke<string>("save_download", {
+      name: `nacre-${stamp}.${format === "html" ? "html" : "txt"}`,
+      base64: btoa(bin),
+    });
+    ws().showToast(t("Saved to {path}", { path: path.replace(/^.*\/Downloads/, "~/Downloads") }));
+  } catch (e) {
+    ws().showToast(String(e), "warn");
+  }
+}
+
 /** Buffer row under a mouse event. */
 export function rowAt(s: TerminalSession, e: MouseEvent): number | undefined {
   const screen = s.term.element?.querySelector(".xterm-screen");

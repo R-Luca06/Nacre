@@ -72,6 +72,10 @@ pub fn run() {
                 .unwrap_or(true);
             let previous = if restore { store.previous() } else { vec![] };
             app.manage(store);
+            app.manage(persistence::history::History::load(
+                data.join("history.jsonl"),
+            ));
+            app.manage(persistence::history::Dirs::load(data.join("dirs.json")));
             if previous.is_empty() {
                 commands::window::open_window(app.handle(), &[])?;
             }
@@ -98,6 +102,11 @@ pub fn run() {
             commands::config::config_replace,
             commands::config::workspace_save,
             commands::menu::menu_set,
+            commands::data::history_add,
+            commands::data::history_search,
+            commands::data::dirs_visit,
+            commands::data::dirs_top,
+            commands::data::ssh_hosts,
             commands::ai::ai_run,
             commands::ai::ai_cancel,
             commands::ai::ai_status,
@@ -127,6 +136,8 @@ pub fn run() {
             commands::window::pane_focus,
             commands::system::git_diff,
             commands::system::save_download,
+            commands::system::paths_exist,
+            commands::system::open_in_editor,
             commands::window::window_ready,
             ipc_socket::debug::debug_result,
         ])

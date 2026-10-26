@@ -22,6 +22,7 @@ import { handleKeyEvent } from "../keybindings/runtime";
 import { closeWindow, makePaneFor, newTab, uid } from "./ops";
 import { restoreWindow, startAutosave, takeSaved } from "./persistence";
 import { initWorkspaces } from "./workspaces";
+import { initDragDrop } from "./dragDrop";
 import { initPaths } from "./paths";
 import { initMenu, refreshMenu } from "./menu";
 import { initClaude } from "../claude/integration";
@@ -115,6 +116,7 @@ export async function bootstrap() {
   );
 
   initMenu();
+  initDragDrop();
   await initWorkspaces();
   await initClaude();
   initRemote();

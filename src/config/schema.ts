@@ -8,6 +8,8 @@ export const defaults = {
   general: {
     language: "auto" as "auto" | "en" | "fr",
     confirm_close: true,
+    /** Command to open files clicked in output: `{file}`, `{line}`, `{col}`. Empty: default app. */
+    editor: "",
     restore_session: true,
     /** Lines of scrollback kept per pane across restarts; 0 disables. */
     restore_scrollback: 1000,
@@ -50,6 +52,8 @@ export const defaults = {
     paste_warning: true,
     bell: "visual" as "none" | "visual" | "sound" | "notify",
     prompt_marks: true,
+    /** Characters that end a word on double-click; URLs, paths and emails stay whole. */
+    word_separators: " ()[]{}',\"`<>|;",
     block_separators: false,
     /** Notify when a command running this many seconds ends out of sight; 0 disables. */
     notify_after: 10,
@@ -65,6 +69,8 @@ export const defaults = {
     time_format: "24h" as "24h" | "24h-seconds" | "12h",
     custom: [] as CustomSegment[],
   },
+  highlight: [] as HighlightRule[],
+  triggers: [] as TriggerRule[],
   claude: {
     context_warn: 60,
     context_danger: 80,
@@ -82,9 +88,25 @@ export const defaults = {
     /** Ask for a fix automatically after a failed command. */
     auto_fix: false,
   },
+  /** name → command; `{{param}}` or `{{param:default}}` are asked when used. */
+  snippets: {} as Record<string, string>,
   profiles: {} as Record<string, Profile>,
   keys: {} as Record<string, string | string[]>,
 };
+
+export interface HighlightRule {
+  regex: string;
+  /** ANSI color name (red, yellow…) or #hex. */
+  color?: string;
+  background?: string;
+}
+
+export interface TriggerRule {
+  regex: string;
+  action: "notify" | "sound" | "command" | "mark";
+  /** For `command`: run in the background; `$1`… are the regex groups. */
+  command?: string;
+}
 
 export interface CustomSegment {
   name: string;
@@ -128,10 +150,48 @@ const rules: Record<string, Rule> = {
 };
 
 /** Arrays of tables, validated item by item. */
+const validRegex = (v: unknown, at: string, errors: string[]): string | null => {
+  if (typeof v !== "string" || !v) {
+    errors.push(`${at}.regex: required`);
+    return null;
+  }
+  try {
+    new RegExp(v);
+    return v;
+  } catch {
+    errors.push(`${at}.regex: invalid regex`);
+    return null;
+  }
+};
+
 const TABLE_LISTS: Record<
   string,
   (item: Record<string, unknown>, at: string, errors: string[]) => unknown
 > = {
+  highlight: (item, at, errors) => {
+    const regex = validRegex(item.regex, at, errors);
+    if (!regex) return null;
+    const str = (k: string) => (typeof item[k] === "string" ? (item[k] as string) : undefined);
+    if (!str("color") && !str("background")) {
+      errors.push(`${at}: set color or background`);
+      return null;
+    }
+    return { regex, color: str("color"), background: str("background") };
+  },
+  triggers: (item, at, errors) => {
+    const regex = validRegex(item.regex, at, errors);
+    if (!regex) return null;
+    const actions = ["notify", "sound", "command", "mark"];
+    if (!actions.includes(item.action as string)) {
+      errors.push(`${at}.action: use one of ${actions.join(", ")}`);
+      return null;
+    }
+    if (item.action === "command" && typeof item.command !== "string") {
+      errors.push(`${at}.command: required for action = "command"`);
+      return null;
+    }
+    return { regex, action: item.action, command: item.command };
+  },
   "statusbar.custom": (item, at, errors) => {
     if (typeof item.name !== "string" || !item.name) {
       errors.push(`${at}.name: required`);
@@ -166,6 +226,7 @@ const TABLE_LISTS: Record<
 
 /** Sections whose keys are free-form; values are checked for type only. */
 const MAPS: Record<string, (v: unknown) => boolean> = {
+  snippets: (v) => typeof v === "string",
   "shell.env": (v) => typeof v === "string",
   keys: (v) => typeof v === "string" || (Array.isArray(v) && v.every((x) => typeof x === "string")),
 };

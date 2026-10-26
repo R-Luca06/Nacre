@@ -3,6 +3,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useWorkspace } from "../store/workspace";
 import { TabView } from "../layout/TabView";
 import { Palette } from "../palette/Palette";
+import { SnippetDialog } from "../palette/SnippetDialog";
 import { TabBar } from "./TabBar";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { Notice } from "./Notice";
@@ -47,7 +48,12 @@ export function App() {
           {tabs.map((tab) => (
             <TabView key={tab.id} tab={tab} visible={tab.id === activeTabId} />
           ))}
-          {overlay?.kind === "palette" && <Palette />}
+          {overlay?.kind === "palette" && (
+            <Palette key={overlay.mode ?? "commands"} mode={overlay.mode} />
+          )}
+          {overlay?.kind === "snippet" && (
+            <SnippetDialog name={overlay.name} template={overlay.template} run={overlay.run} />
+          )}
           {overlay?.kind === "confirm" && <ConfirmDialog confirm={overlay.confirm} />}
           {overlay?.kind === "prompt" && <PromptDialog prompt={overlay.prompt} />}
           {overlay?.kind === "settings" && <Settings />}

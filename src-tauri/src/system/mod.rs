@@ -1,5 +1,7 @@
 //! Data for status bar segments: system load, git, project tools, custom scripts.
 
+pub mod ssh;
+
 use std::collections::HashMap;
 use std::path::Path;
 use std::process::{Command, Stdio};

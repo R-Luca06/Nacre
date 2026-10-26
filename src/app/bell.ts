@@ -2,7 +2,7 @@ import { getSession } from "../terminal/registry";
 
 let audio: AudioContext | null = null;
 
-function beep() {
+export function beep() {
   audio ??= new AudioContext();
   const osc = audio.createOscillator();
   const gain = audio.createGain();

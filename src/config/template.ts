@@ -23,7 +23,7 @@ export function renderTemplate(
     "",
   ];
   for (const [section, values] of Object.entries(c)) {
-    if (section === "keys" || section === "profiles") continue;
+    if (["keys", "profiles", "snippets", "highlight", "triggers"].includes(section)) continue;
     out.push(`[${section}]`);
     for (const [key, value] of Object.entries(values as object)) {
       if (section === "statusbar" && key === "custom") continue;
@@ -38,6 +38,17 @@ export function renderTemplate(
   out.push('#   name = "load"');
   out.push('#   command = "sysctl -n vm.loadavg"');
   out.push("#   interval = 10");
+  out.push("");
+  out.push("# Highlight matches in output, and react to lines with triggers.");
+  out.push("# [[highlight]]");
+  out.push('#   regex = "\\\\bERROR\\\\b"');
+  out.push('#   color = "red"');
+  out.push("# [[triggers]]");
+  out.push('#   regex = "listening on port (\\\\d+)"');
+  out.push('#   action = "notify"            # notify | sound | command | mark');
+  out.push("");
+  out.push("[snippets]");
+  out.push('#   "ssh to" = "ssh {{host}} -p {{port:22}}"');
   out.push("");
   out.push("# Profiles: new tabs with their own shell, directory, theme or font.");
   out.push("# [profiles.work]");
