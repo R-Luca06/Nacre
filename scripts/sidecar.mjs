@@ -5,7 +5,9 @@ import { copyFileSync, mkdirSync } from "node:fs";
 const profile = process.argv[2] === "release" ? "release" : "debug";
 const triple =
   process.env.TAURI_ENV_TARGET_TRIPLE ||
-  execSync("rustc -vV").toString().match(/host: (\S+)/)[1];
+  execSync("rustc -vV")
+    .toString()
+    .match(/host: (\S+)/)[1];
 const flags = profile === "release" ? `--release --target ${triple}` : "";
 execSync(`cargo build -p nacre-cli ${flags}`, { stdio: "inherit" });
 const src = profile === "release" ? `target/${triple}/release/nacre` : "target/debug/nacre";
