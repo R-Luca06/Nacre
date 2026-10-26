@@ -474,9 +474,8 @@ Chaque phase se termine par une app **qui compile, qui se lance et qui marche**.
 - Images inline : protocole Kitty non géré par xterm.js (Sixel et iTerm2 OK).
 - Intégration `tmux -CC` non faite : protocole de contrôle à implémenter (parsing `%output`/`%layout-change`, mapping fenêtres → onglets).
 - Navigateur de fichiers SFTP non fait.
-- Builds : Linux configuré dans la CI mais jamais compilé (pas de GTK/WebKit en local) ; Windows non supporté (socket Unix, `libc`, groupes de process).
+- Builds : Linux compile en CI (v0.1.0) mais n'était pas empaqueté (cibles `deb` et `appimage` ajoutées ensuite, jamais lancé) ; Windows non supporté (socket Unix, `libc`, groupes de process).
 - Synchronisation : via dotfiles (symlink ou `git clone` d'un gist) ; pas de synchro gist intégrée à l'app. Un fichier ajouté en symlink n'est suivi qu'après redémarrage.
 - Scrollback sur disque : la sortie des applis plein écran (vim, htop) y apparaît en vrac ; seules les couleurs sont gardées.
 - Position des feux tricolores (12,16) non vérifiée visuellement : les captures WebKit ne montrent pas les contrôles natifs.
-- Releases : secrets `TAURI_SIGNING_PRIVATE_KEY*` absents du dépôt (le workflow Release échouera à la signature) ; tant que le dépôt est privé, l'updater ne peut pas lire `latest.json` sans authentification.
 - Panneau Claude : la todo-list vient de l'outil `TodoWrite`, absent des sessions Claude Code 2.1.310 testées ; la section reste vide. Format de remplacement à vérifier avant de le gérer.
