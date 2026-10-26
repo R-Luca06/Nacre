@@ -2,6 +2,7 @@ import { t } from "../i18n";
 import type { Bindings } from "../keybindings/keymap";
 import { useWorkspace } from "../store/workspace";
 import * as ops from "./ops";
+import { connectClaude, disconnectClaude } from "../claude/install";
 
 export interface Action {
   id: string;
@@ -96,6 +97,23 @@ add("edit.pageDown", "Page Down", "Edit", ["shift+pagedown"], () => ops.scroll("
 add("view.zoomIn", "Bigger Text", "View", ["cmd+=", "cmd++", "shift+cmd+="], () => ops.zoomFont(1));
 add("view.zoomOut", "Smaller Text", "View", ["cmd+-"], () => ops.zoomFont(-1));
 add("view.zoomReset", "Actual Size", "View", ["cmd+0"], () => ops.zoomFont("reset"));
+// Claude
+add("claude.dashboard", "Claude Sessions", "App", ["shift+cmd+c"], () =>
+  ws().setOverlay(ws().overlay?.kind === "claude" ? null : { kind: "claude" }),
+);
+add("claude.history", "Claude History", "App", [], () =>
+  ws().setOverlay({ kind: "claude", view: "history" }),
+);
+add("claude.usage", "Claude Usage", "App", [], () =>
+  ws().setOverlay({ kind: "claude", view: "usage" }),
+);
+add("claude.split", "Claude in Split", "App", ["alt+cmd+c"], () =>
+  ops.splitPane("right", { command: "claude" }),
+);
+add("claude.tab", "Claude in New Tab", "App", [], () => ops.newTab({ command: "claude" }));
+add("claude.panel", "Claude Panel", "App", ["ctrl+cmd+c"], () => ws().togglePanel("claude"));
+add("claude.connect", "Connect Claude Code", "App", [], () => connectClaude());
+add("claude.disconnect", "Disconnect Claude Code", "App", [], () => disconnectClaude());
 add("app.settings", "Settings", "App", ["cmd+,"], () => ops.openSettings());
 add("app.openConfig", "Open Config File", "App", [], () => ops.openConfigFile());
 add("app.quit", "Quit Nacre", "App", ["cmd+q"], () => ops.quit());

@@ -84,6 +84,27 @@ pub fn window_new(app: AppHandle, cwd: Option<String>) -> Result<String, String>
         .map_err(|e| e.to_string())
 }
 
+/// Brings the window that owns `pane` to the front and focuses the pane.
+#[tauri::command]
+pub fn pane_focus(
+    app: AppHandle,
+    pty: tauri::State<'_, crate::pty::PtyManager>,
+    pane: String,
+) -> Result<(), String> {
+    use tauri::Emitter;
+    let owner = pty.owner_of(&pane).ok_or("Pane closed.")?;
+    let win = app.get_webview_window(&owner).ok_or("Window closed.")?;
+    let _ = win.unminimize();
+    let _ = win.show();
+    let _ = win.set_focus();
+    app.emit_to(
+        owner.as_str(),
+        "remote",
+        serde_json::json!({ "cmd": "focus-pane", "pane": pane }),
+    )
+    .map_err(|e| e.to_string())
+}
+
 /// The frontend shows the window once its first frame is ready, avoiding a white flash.
 #[tauri::command]
 pub fn window_ready(window: tauri::Window) {

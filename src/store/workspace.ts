@@ -48,6 +48,8 @@ export type Overlay =
   | { kind: "palette"; mode?: string }
   | { kind: "confirm"; confirm: Confirm }
   | { kind: "rename"; tabId: string }
+  | { kind: "claude"; view?: "sessions" | "history" | "usage" }
+  | { kind: "diff"; path: string; cwd: string | null }
   | null;
 
 interface WorkspaceState {
@@ -59,6 +61,9 @@ interface WorkspaceState {
   /** Pane whose search bar is open. */
   search: string | null;
   toast: { id: number; text: string; level: "info" | "warn"; tabId?: string } | null;
+  /** Side panel shown next to the panes. */
+  panel: "claude" | null;
+  togglePanel: (p: "claude") => void;
   showToast: (text: string, level?: "info" | "warn", tabId?: string) => void;
   setTabs: (tabs: Tab[], activeTabId?: string) => void;
   updateTab: (id: string, patch: Partial<Tab>) => void;
@@ -80,6 +85,8 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
   overlay: null,
   search: null,
   toast: null,
+  panel: null,
+  togglePanel: (p) => set((s) => ({ panel: s.panel === p ? null : p })),
   showToast: (text, level = "info", tabId) => {
     const id = Date.now();
     set({ toast: { id, text, level, tabId } });

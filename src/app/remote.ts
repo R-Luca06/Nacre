@@ -1,7 +1,7 @@
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useWorkspace } from "../store/workspace";
-import { defaultLaunch, focusPane, newTab, splitPane } from "./ops";
+import { focusPane, newTab, splitPane } from "./ops";
 
 interface Remote {
   cmd: "new-tab" | "split" | "focus-pane";
@@ -15,12 +15,12 @@ interface Remote {
 export function initRemote() {
   void listen<Remote>("remote", async (e) => {
     const r = e.payload;
-    const launch = { ...defaultLaunch(r.cwd ?? undefined), command: r.command ?? undefined };
+    const opts = { cwd: r.cwd ?? undefined, command: r.command ?? undefined };
     if (r.cmd === "new-tab") {
-      await newTab({ launch });
+      await newTab(opts);
     } else if (r.cmd === "split") {
       if (r.pane && useWorkspace.getState().panes[r.pane]) focusPane(r.pane);
-      await splitPane(r.side ?? "right", launch);
+      await splitPane(r.side ?? "right", opts);
     } else if (r.cmd === "focus-pane" && r.pane) {
       focusPane(r.pane);
     }

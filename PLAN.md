@@ -392,15 +392,15 @@ Chaque phase se termine par une app **qui compile, qui se lance et qui marche**.
 - [x] Couleurs conditionnelles + actions au clic
 
 ### Phase 5 — Intégration Claude (4.G)
-- [ ] Étude du format réel : transcripts JSONL, JSON des hooks, JSON de la status line (doc officielle + fichiers locaux)
-- [ ] Injection de `NACRE_PANE_ID` / `NACRE_SOCKET` dans chaque PTY
-- [ ] Socket Unix + CLI `nacre` (`claude-event`, `statusline`, `notify`)
-- [ ] Parser JSONL + calcul contexte/tokens/coût, avec tests sur des fixtures
-- [ ] Détection de session (hooks + fallback par process)
-- [ ] Segments Claude : jauge de contexte, modèle, coût, état
-- [ ] Notifications + badges onglet/Dock
-- [ ] Dashboard des sessions, historique + reprise
-- [ ] Assistant d'installation des hooks (fusion propre dans `~/.claude/settings.json`, avec sauvegarde)
+- [x] Étude du format réel : transcripts JSONL, JSON des hooks, JSON de la status line (doc officielle + fichiers locaux)
+- [x] Injection de `NACRE_PANE_ID` / `NACRE_SOCKET` dans chaque PTY
+- [x] Socket Unix + CLI `nacre` (`claude-event`, `statusline`, `notify`)
+- [x] Parser JSONL + calcul contexte/tokens/coût, avec tests sur des fixtures
+- [x] Détection de session (hooks + fallback par process)
+- [x] Segments Claude : jauge de contexte, modèle, coût, état
+- [x] Notifications + badges onglet/Dock
+- [x] Dashboard des sessions, historique + reprise
+- [x] Assistant d'installation des hooks (fusion propre dans `~/.claude/settings.json`, avec sauvegarde)
 
 ### Phase 6 — Intégration shell et blocs (4.H)
 - [ ] Scripts zsh/bash/fish (OSC 7 + OSC 133) et injection automatique
@@ -457,6 +457,7 @@ Chaque phase se termine par une app **qui compile, qui se lance et qui marche**.
 - 2026-10-26 · Phases 1-2 · PTY Rust (lots binaires, contrôle de flux), session xterm.js (WebGL), moteur de raccourcis (accords, AZERTY), arbre de layout testé, onglets (glisser, renommer, épingler, couleur, rouvrir), splits, zoom, broadcast, multi-fenêtres, palette, confirmation de fermeture. Direction visuelle « Nacre » choisie, `docs/design.md`. Socket debug (eval + snapshot WKWebView) pour vérifier l'UI.
 - 2026-10-26 · Phase 3 · `~/.config/nacre/config.toml` commenté généré au 1er lancement (défauts = source TS unique, testés), validation par champ avec message d'une ligne, rechargement à chaud (notify) config + `themes/*.toml`, 21 thèmes intégrés, chrome dérivé du thème, ligatures, zoom, menus natifs synchronisés avec les raccourcis, icône.
 - 2026-10-26 · Phase 4 · Barre d'état (fenêtre ou par pane, haut/bas), 4 styles (minimal, simple, powerline sans police spéciale, pills), segments cwd, git, heure, process, CPU, RAM, batterie, réseau, versions d'outils par projet, k8s, docker, AWS, venv, scripts perso (`[[statusbar.custom]]`, timeout + kill du groupe), niveaux de couleur, clics.
+- 2026-10-26 · Phase 5 · Formats vérifiés (transcripts locaux + doc hooks/status line). Hub Rust : hooks + status line via socket, lecture incrémentale des transcripts (usage dédoublonné par message, sous-agents exclus du contexte), tarifs officiels, fallback par process. CLI `nacre` (claude-event, statusline --wrap, notify, new-tab, split, send-text). Segments jauge/modèle/coût/état/limites 5 h-7 j, badges onglet + Dock, notifications si pane non visible, alerte de contexte, dashboard (sessions, historique + reprise, consommation par jour/projet/modèle), panneau latéral (tâches, fichiers + diff, graphique de contexte), assistant d'installation avec sauvegarde et désinstallation exacte (testé). Validé avec un vrai `claude -p` + `--settings` temporaire, sans toucher `~/.claude`.
 
 ## 8. Problèmes ouverts
 

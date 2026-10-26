@@ -46,6 +46,32 @@ pub async fn contexts() -> Result<HashMap<&'static str, String>, String> {
     Ok(out)
 }
 
+/// Uncommitted changes of one file (staged and unstaged), as a unified diff.
+#[tauri::command]
+pub async fn git_diff(cwd: String, path: String) -> Result<String, String> {
+    use std::process::Command;
+    use std::time::Duration;
+    let run = |args: &[&str]| {
+        system::run_with(
+            Command::new("git").args(args).current_dir(&cwd),
+            Duration::from_secs(5),
+            &[0, 1],
+        )
+    };
+    let diff = run(&["--no-optional-locks", "diff", "HEAD", "--", &path])
+        .filter(|d| !d.is_empty())
+        .or_else(|| {
+            run(&[
+                "--no-optional-locks",
+                "diff",
+                "--no-index",
+                "/dev/null",
+                &path,
+            ])
+        });
+    Ok(diff.unwrap_or_default())
+}
+
 /// Environment of the pane's shell (e.g. `AWS_PROFILE`, `VIRTUAL_ENV`).
 #[tauri::command]
 pub async fn pane_env(

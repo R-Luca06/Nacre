@@ -357,3 +357,13 @@ svg {
 .toast.warn {
   border-left-color: var(--warn);
 }
+
+.main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.main > .workspace {
+  min-width: 0;
+}

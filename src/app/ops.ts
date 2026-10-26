@@ -78,9 +78,11 @@ export async function paneCwd(id: string | undefined): Promise<string | undefine
 
 const activePaneId = () => activeTab()?.active;
 
-export async function newTab(opts: { cwd?: string; launch?: LaunchOptions; after?: string } = {}) {
+export async function newTab(
+  opts: { cwd?: string; command?: string; launch?: LaunchOptions; after?: string } = {},
+) {
   const cwd = opts.cwd ?? (await paneCwd(activePaneId()));
-  const id = makePane(opts.launch ?? defaultLaunch(cwd));
+  const id = makePane(opts.launch ?? { ...defaultLaunch(cwd), command: opts.command });
   const tab: Tab = { id: uid("t"), root: pane(id), active: id, zoomed: null };
   const { tabs } = ws();
   const at = opts.after ? tabs.findIndex((x) => x.id === opts.after) + 1 : tabs.length;
@@ -90,11 +92,14 @@ export async function newTab(opts: { cwd?: string; launch?: LaunchOptions; after
   return tab;
 }
 
-export async function splitPane(side: Side, launch?: LaunchOptions) {
+export async function splitPane(
+  side: Side,
+  opts: { cwd?: string; command?: string; launch?: LaunchOptions } = {},
+) {
   const tab = activeTab();
   if (!tab) return;
-  const cwd = await paneCwd(tab.active);
-  const id = makePane(launch ?? defaultLaunch(cwd));
+  const cwd = opts.cwd ?? (await paneCwd(tab.active));
+  const id = makePane(opts.launch ?? { ...defaultLaunch(cwd), command: opts.command });
   ws().updateTab(tab.id, {
     root: split(tab.root, tab.active, side, id, uid("s")),
     active: id,

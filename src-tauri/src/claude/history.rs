@@ -30,6 +30,7 @@ pub struct UsageRow {
     pub day: String,
     pub project: String,
     pub model: String,
+    pub model_name: String,
     pub input: u64,
     pub output: u64,
     pub cache_read: u64,
@@ -110,7 +111,7 @@ fn scan_usage(path: &Path, project: &str) -> Vec<UsageRow> {
     let Ok(f) = std::fs::File::open(path) else {
         return vec![];
     };
-    let mut rows: BTreeMap<(String, String), UsageRow> = BTreeMap::new();
+    let mut rows: BTreeMap<(String, String, String), UsageRow> = BTreeMap::new();
     let mut seen: HashSet<String> = HashSet::new();
     for line in BufReader::new(f).lines().map_while(Result::ok) {
         if !line.contains(r#""usage""#) || !line.contains(r#""assistant""#) {
@@ -149,12 +150,19 @@ fn scan_usage(path: &Path, project: &str) -> Vec<UsageRow> {
             .as_str()
             .and_then(local_day)
             .unwrap_or_else(|| "unknown".into());
+        // The encoded directory name is lossy; the line's cwd names the project.
+        let project = v["cwd"]
+            .as_str()
+            .and_then(|c| Path::new(c).file_name())
+            .map(|f| f.to_string_lossy().into_owned())
+            .unwrap_or_else(|| project.to_owned());
         let r = rows
-            .entry((day.clone(), model.to_owned()))
+            .entry((day.clone(), model.to_owned(), project.clone()))
             .or_insert_with(|| UsageRow {
                 day,
-                project: project.to_owned(),
+                project,
                 model: model.to_owned(),
+                model_name: pricing::display_name(model),
                 ..Default::default()
             });
         r.input += t.input;

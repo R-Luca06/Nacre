@@ -86,6 +86,8 @@ pub fn run() {
             commands::app_quit,
             commands::pty_busy,
             commands::window::window_new,
+            commands::window::pane_focus,
+            commands::system::git_diff,
             commands::window::window_ready,
             ipc_socket::debug::debug_result,
         ])

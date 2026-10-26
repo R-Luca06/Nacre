@@ -20,7 +20,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Config, CustomSegment } from "../config/schema";
-import type { PaneMeta } from "../store/workspace";
+import { type PaneMeta, useWorkspace } from "../store/workspace";
 import type { ClaudeSession } from "../claude/store";
 import { contextLevel, formatCost, formatTokens } from "../claude/format";
 import { formatDuration as fmtDur } from "./format";
@@ -418,8 +418,4 @@ registerSegment({
     c ? { text: `${fmtDur(c.durationMs ?? Date.now() - c.startedAt)} · ${c.prompts}` } : null,
 });
 
-let dashboardOpener: () => void = () => {};
-export function setDashboardOpener(fn: () => void) {
-  dashboardOpener = fn;
-}
-const openDashboard = () => dashboardOpener();
+const openDashboard = () => useWorkspace.getState().setOverlay({ kind: "claude" });

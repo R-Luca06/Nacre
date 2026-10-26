@@ -107,6 +107,11 @@ pub fn parse_pmset(text: &str) -> (Option<u8>, bool) {
 
 /// Runs a command with a timeout; returns trimmed stdout on success.
 pub fn run(cmd: &mut Command, timeout: Duration) -> Option<String> {
+    run_with(cmd, timeout, &[0])
+}
+
+/// Like `run`, accepting any of `ok_codes` (e.g. `diff` exits 1 when files differ).
+pub fn run_with(cmd: &mut Command, timeout: Duration, ok_codes: &[i32]) -> Option<String> {
     use std::io::Read;
     use std::os::unix::process::CommandExt;
     let mut child = cmd
@@ -138,7 +143,7 @@ pub fn run(cmd: &mut Command, timeout: Duration) -> Option<String> {
     };
     let out = reader.join().ok()?;
     status
-        .filter(|s| s.success())
+        .filter(|s| s.code().is_some_and(|c| ok_codes.contains(&c)))
         .map(|_| out.trim_end().to_owned())
 }
 
