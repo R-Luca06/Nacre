@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { ExitInfo, ProcInfo } from "../ipc/pty";
 import { type LayoutNode, contains } from "../layout/tree";
 import type { LaunchOptions } from "../terminal/session";
+import type { AiRequestState } from "../ai/CommandBar";
 
 export interface PaneMeta {
   id: string;
@@ -78,8 +79,11 @@ interface WorkspaceState {
   search: string | null;
   toast: { id: number; text: string; level: "info" | "warn"; tabId?: string } | null;
   /** Side panel shown next to the panes. */
-  panel: "claude" | null;
-  togglePanel: (p: "claude") => void;
+  panel: "claude" | "chat" | null;
+  togglePanel: (p: "claude" | "chat") => void;
+  /** AI bar shown at the bottom of a pane. */
+  ai: AiRequestState | null;
+  setAi: (a: AiRequestState | null) => void;
   showToast: (text: string, level?: "info" | "warn", tabId?: string) => void;
   setTabs: (tabs: Tab[], activeTabId?: string) => void;
   updateTab: (id: string, patch: Partial<Tab>) => void;
@@ -102,6 +106,8 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
   search: null,
   toast: null,
   panel: null,
+  ai: null,
+  setAi: (ai) => set({ ai }),
   togglePanel: (p) => set((s) => ({ panel: s.panel === p ? null : p })),
   showToast: (text, level = "info", tabId) => {
     const id = Date.now();

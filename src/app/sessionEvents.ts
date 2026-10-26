@@ -50,6 +50,15 @@ export function sessionEvents(id: string): SessionEvents {
       ws().updatePane(id, {
         lastCommand: { command: b.command, duration, exitCode: b.exitCode, at: Date.now() },
       });
+      // 130: interrupted with Ctrl-C, not worth a suggestion.
+      if (
+        b.exitCode &&
+        b.exitCode !== 130 &&
+        useConfig.getState().config.ai.auto_fix &&
+        isVisible(id)
+      ) {
+        ws().setAi({ paneId: id, mode: "fix", blockId: b.id });
+      }
       const after = useConfig.getState().config.terminal.notify_after;
       if (after > 0 && duration >= after * 1000 && !isVisible(id)) {
         const cmd = (b.command ?? "").split("\n")[0].slice(0, 80);

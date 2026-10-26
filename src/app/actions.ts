@@ -123,6 +123,18 @@ add("edit.pageDown", "Page Down", "Edit", ["shift+pagedown"], () => ops.scroll("
 add("view.zoomIn", "Bigger Text", "View", ["cmd+=", "cmd++", "shift+cmd+="], () => ops.zoomFont(1));
 add("view.zoomOut", "Smaller Text", "View", ["cmd+-"], () => ops.zoomFont(-1));
 add("view.zoomReset", "Actual Size", "View", ["cmd+0"], () => ops.zoomFont("reset"));
+// AI in the terminal
+const aiFor = (mode: "command" | "explain" | "summarize" | "fix") => {
+  const id = ws().tabs.find((x) => x.id === ws().activeTabId)?.active;
+  if (id)
+    ws().setAi(ws().ai?.paneId === id && ws().ai?.mode === mode ? null : { paneId: id, mode });
+};
+add("ai.command", "Command from Text", "App", ["cmd+k"], () => aiFor("command"));
+add("ai.explain", "Explain Error", "App", ["shift+cmd+e"], () => aiFor("explain"));
+add("ai.summarize", "Summarize Output", "App", [], () => aiFor("summarize"));
+add("ai.fix", "Suggest Fix", "App", ["alt+cmd+f"], () => aiFor("fix"));
+add("ai.chat", "AI Chat", "App", ["shift+cmd+a"], () => ws().togglePanel("chat"));
+
 // Claude
 add("claude.dashboard", "Claude Sessions", "App", ["shift+cmd+c"], () =>
   ws().setOverlay(ws().overlay?.kind === "claude" ? null : { kind: "claude" }),

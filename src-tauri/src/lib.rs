@@ -1,3 +1,4 @@
+mod ai;
 mod claude;
 mod commands;
 mod config;
@@ -42,6 +43,7 @@ pub fn run() {
         .manage(system::ToolCache::default())
         .manage(ipc_socket::DebugState::default())
         .manage(claude::ClaudeHub::new())
+        .manage(ai::AiRuns::default())
         .manage(claude::history::HistoryCache::default())
         .setup(|app| {
             let data = app
@@ -96,6 +98,10 @@ pub fn run() {
             commands::config::config_replace,
             commands::config::workspace_save,
             commands::menu::menu_set,
+            commands::ai::ai_run,
+            commands::ai::ai_cancel,
+            commands::ai::ai_status,
+            commands::ai::ai_set_key,
             commands::claude::claude_sessions,
             commands::claude::claude_ack,
             commands::claude::claude_detect,

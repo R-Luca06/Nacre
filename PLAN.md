@@ -416,9 +416,9 @@ Chaque phase se termine par une app **qui compile, qui se lance et qui marche**.
 - [x] Éditeur de raccourcis (toutes les actions, conflits, réinitialisation)
 
 ### Phase 8 — IA dans le terminal (4.G IA)
-- [ ] Cmd+K langage naturel → commande (via `claude -p`), validation obligatoire avant exécution
-- [ ] Expliquer l'erreur / résumer un output
-- [ ] Panneau de chat
+- [x] Cmd+K langage naturel → commande (via `claude -p`), validation obligatoire avant exécution
+- [x] Expliquer l'erreur / résumer un output
+- [x] Panneau de chat
 
 ### Phase 9 — Productivité et extensibilité (4.L, 4.M, 4.O, 4.J V2)
 - [ ] Snippets, historique global, dossiers récents
@@ -460,6 +460,7 @@ Chaque phase se termine par une app **qui compile, qui se lance et qui marche**.
 - 2026-10-26 · Phase 5 · Formats vérifiés (transcripts locaux + doc hooks/status line). Hub Rust : hooks + status line via socket, lecture incrémentale des transcripts (usage dédoublonné par message, sous-agents exclus du contexte), tarifs officiels, fallback par process. CLI `nacre` (claude-event, statusline --wrap, notify, new-tab, split, send-text). Segments jauge/modèle/coût/état/limites 5 h-7 j, badges onglet + Dock, notifications si pane non visible, alerte de contexte, dashboard (sessions, historique + reprise, consommation par jour/projet/modèle), panneau latéral (tâches, fichiers + diff, graphique de contexte), assistant d'installation avec sauvegarde et désinstallation exacte (testé). Validé avec un vrai `claude -p` + `--settings` temporaire, sans toucher `~/.claude`.
 - 2026-10-26 · Phase 6 · Intégration shell sans toucher aux dotfiles : zsh via ZDOTDIR (restauré aussitôt), bash via --rcfile (émule le login), fish via XDG_DATA_DIRS. OSC 7 + OSC 133 (A/B/C/D + E pour le texte de la commande). Marques ✓/✗ dans la marge, ⌘↑/⌘↓ entre invites, durée et code dans la barre d'état, notification des longues commandes, copier/sélectionner/relancer la sortie, en-tête collant, filtre de sortie, partage Markdown/image, séparateurs de blocs (option), menu contextuel par bloc.
 - 2026-10-26 · Phase 7 · Restauration de session (fenêtres, position, onglets, splits, dossiers, scrollback coloré, thème d'onglet) avec sauvegarde continue. Workspaces en fichiers TOML (préréglages ou arbre explicite, commandes de démarrage, dossiers relatifs), ouverture depuis la palette, « enregistrer la fenêtre comme workspace ». Profils (shell, dossier, env, commande, thème, police) + attribution auto par dossier ou hôte SSH. Réglages graphiques synchronisés avec config.toml (commentaires préservés), sélecteur de thèmes, éditeur avec aperçu, import iTerm2/Base16/Windows Terminal/Ghostty/Alacritty, export, import/export de la config, éditeur de raccourcis (capture, accords, conflits, réinitialisation), thème par onglet, thème d'interface indépendant.
+- 2026-10-26 · Phase 8 · IA via `claude -p` (abonnement réutilisé, sans outils, sans session persistée, format stream-json vérifié) ou clé API optionnelle dans le trousseau macOS (HTTP direct, fallbacks de refus). ⌘K texte → commande avec Insérer/Exécuter et alerte sur les commandes risquées, expliquer l'erreur, résumer une sortie, proposer une correction (auto en option), panneau de chat avec contexte au choix (dossier, dernière commande, écran). Réponses dans la langue de l'interface.
 
 ## 8. Problèmes ouverts
 

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { X } from "lucide-react";
 import { openPath } from "@tauri-apps/plugin-opener";
@@ -14,7 +14,7 @@ import { KeysSection } from "./KeysSection";
 import { availableMonoFonts } from "./fonts";
 import "./settings.css";
 
-type SectionId = "general" | "appearance" | "terminal" | "statusbar" | "claude" | "keys";
+type SectionId = "general" | "appearance" | "terminal" | "statusbar" | "claude" | "ai" | "keys";
 
 const SECTIONS: { id: SectionId; label: string }[] = [
   { id: "general", label: "General" },
@@ -22,6 +22,7 @@ const SECTIONS: { id: SectionId; label: string }[] = [
   { id: "terminal", label: "Terminal" },
   { id: "statusbar", label: "Status Bar" },
   { id: "claude", label: "Claude" },
+  { id: "ai", label: "AI" },
   { id: "keys", label: "Shortcuts" },
 ];
 
@@ -332,6 +333,83 @@ function ClaudeSection() {
   );
 }
 
+function AiSection() {
+  const provider = useConfig((s) => s.config.ai.provider);
+  const claudePath = useConfig((s) => s.config.ai.claude_path);
+  const [status, setStatus] = useState<{ claude: string | null; apiKey: boolean } | null>(null);
+  const [key, setKey] = useState("");
+  const refresh = () =>
+    void invoke<{ claude: string | null; apiKey: boolean }>("ai_status", {
+      claudePath: claudePath || null,
+    }).then(setStatus);
+  useEffect(refresh, [claudePath]);
+  const saveKey = async (value: string | null) => {
+    try {
+      await invoke("ai_set_key", { key: value });
+      setKey("");
+      refresh();
+    } catch (e) {
+      useWorkspace.getState().showToast(String(e), "warn");
+    }
+  };
+  const models = ["haiku", "sonnet", "opus", "fable"].map((m) => ({
+    value: m,
+    label: m[0].toUpperCase() + m.slice(1),
+  }));
+  return (
+    <>
+      <Select
+        path={["ai", "provider"]}
+        label={t("Use")}
+        options={[
+          { value: "claude-code", label: "Claude Code" },
+          { value: "api", label: t("API key") },
+        ]}
+      />
+      <Select path={["ai", "model"]} label={t("Model for commands")} options={models} />
+      <Select path={["ai", "chat_model"]} label={t("Model for chat")} options={models} />
+      <Toggle path={["ai", "auto_fix"]} label={t("Suggest a fix after errors")} />
+      {provider === "claude-code" ? (
+        <>
+          <TextField
+            path={["ai", "claude_path"]}
+            label={t("Claude Code path")}
+            placeholder={status?.claude ?? t("Not found")}
+          />
+        </>
+      ) : (
+        <div className="set-row">
+          <span className="set-label">{t("API key")}</span>
+          <span className="set-control">
+            {status?.apiKey ? (
+              <>
+                <span className="dim">{t("Saved in Keychain")}</span>
+                <button className="btn" onClick={() => void saveKey(null)}>
+                  {t("Remove")}
+                </button>
+              </>
+            ) : (
+              <>
+                <input
+                  className="text"
+                  type="password"
+                  value={key}
+                  placeholder="sk-ant-…"
+                  onChange={(e) => setKey(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && key && void saveKey(key)}
+                />
+                <button className="btn" disabled={!key} onClick={() => void saveKey(key)}>
+                  {t("Save")}
+                </button>
+              </>
+            )}
+          </span>
+        </div>
+      )}
+    </>
+  );
+}
+
 export function Settings() {
   const [section, setSection] = useState<SectionId>("appearance");
   const path = useConfig((s) => s.path);
@@ -374,6 +452,7 @@ export function Settings() {
           {section === "terminal" && <Terminal />}
           {section === "statusbar" && <StatusBarSection />}
           {section === "claude" && <ClaudeSection />}
+          {section === "ai" && <AiSection />}
           {section === "keys" && <KeysSection />}
         </div>
       </div>

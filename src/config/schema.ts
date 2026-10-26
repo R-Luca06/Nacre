@@ -74,6 +74,14 @@ export const defaults = {
     sound: false,
     dock_badge: true,
   },
+  ai: {
+    provider: "claude-code" as "claude-code" | "api",
+    model: "haiku",
+    chat_model: "sonnet",
+    claude_path: "",
+    /** Ask for a fix automatically after a failed command. */
+    auto_fix: false,
+  },
   profiles: {} as Record<string, Profile>,
   keys: {} as Record<string, string | string[]>,
 };
@@ -112,6 +120,7 @@ const rules: Record<string, Rule> = {
   "claude.context_warn": { min: 1, max: 100 },
   "claude.context_danger": { min: 1, max: 100 },
   "claude.context_alert": { min: 1, max: 100 },
+  "ai.provider": { enum: ["claude-code", "api"] },
   "statusbar.position": { enum: ["bottom", "top"] },
   "statusbar.scope": { enum: ["window", "pane"] },
   "statusbar.style": { enum: ["minimal", "simple", "powerline", "pills"] },

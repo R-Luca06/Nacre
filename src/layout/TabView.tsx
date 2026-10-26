@@ -8,6 +8,7 @@ import { SearchBar } from "../terminal/SearchBar";
 import { t } from "../i18n";
 import { StatusBar } from "../statusbar/StatusBar";
 import { StickyHeader } from "../terminal/StickyHeader";
+import { AiBar } from "../ai/CommandBar";
 import { showContextMenu } from "../terminal/blockActions";
 
 const pct = (n: number) => `${n * 100}%`;
@@ -66,6 +67,7 @@ function PaneView(props: {
   const ref = useRef<HTMLDivElement>(null);
   const searchOpen = useWorkspace((s) => s.search === id);
   const session = getSession(id);
+  const ai = useWorkspace((s) => (s.ai?.paneId === id ? s.ai : null));
   const dim = useConfig((s) => s.config.window.dim_inactive);
   const paneBar = useConfig(
     (s) => s.config.statusbar.enabled && s.config.statusbar.scope === "pane",
@@ -107,6 +109,7 @@ function PaneView(props: {
       {showActive && active && <div className="pane-edge" />}
       {searchOpen && <SearchBar paneId={id} />}
       {session && <StickyHeader session={session} />}
+      {ai && <AiBar key={`${ai.mode}:${ai.blockId ?? ""}`} {...ai} />}
       {paneBar && <StatusBar paneId={id} />}
     </div>
   );

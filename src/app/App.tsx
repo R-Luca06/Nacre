@@ -12,6 +12,7 @@ import { Settings } from "../settings/Settings";
 import { Dashboard } from "../claude/Dashboard";
 import { ClaudePanel, DiffView } from "../claude/Panel";
 import { FilterView } from "../terminal/FilterView";
+import { ChatPanel } from "../ai/ChatPanel";
 import { StatusBar } from "../statusbar/StatusBar";
 import { useConfig } from "../store/config";
 import "./app.css";
@@ -61,6 +62,7 @@ export function App() {
           <Toast />
         </div>
         {panel === "claude" && <ClaudePanel />}
+        {panel === "chat" && <ChatPanel />}
       </div>
       {windowBar && sb.position === "bottom" && <StatusBar />}
     </div>

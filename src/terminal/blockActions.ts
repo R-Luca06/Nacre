@@ -115,6 +115,18 @@ export async function showContextMenu(s: TerminalSession, e: MouseEvent) {
         { text: t("Copy Output"), action: () => copyOutput(s, b) },
         { text: t("Select Output"), action: () => selectOutput(s, b) },
         { text: t("Run Again"), action: () => rerun(s, b) },
+        ...(b.exitCode
+          ? [
+              {
+                text: t("Explain Error"),
+                action: () => ws().setAi({ paneId: s.id, mode: "explain", blockId: b.id }),
+              },
+            ]
+          : []),
+        {
+          text: t("Summarize Output"),
+          action: () => ws().setAi({ paneId: s.id, mode: "summarize", blockId: b.id }),
+        },
         {
           text: t("Filter Output…"),
           action: () => ws().setOverlay({ kind: "filter", paneId: s.id, blockId: b.id }),
