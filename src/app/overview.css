@@ -1,5 +1,6 @@
 .scrim.overview {
   align-items: flex-start;
+  background: var(--bg);
   overflow-y: auto;
 }
 

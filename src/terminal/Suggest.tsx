@@ -58,7 +58,8 @@ export function Suggest({ session, paneId }: { session: TerminalSession; paneId:
   const enabled = useConfig((s) => s.config.terminal.autosuggest);
   const [ghost, setGhost] = useState<{ text: string; x: number; y: number } | null>(null);
   const [menu, setMenu] = useState<Menu | null>(null);
-  const [viewport, setViewport] = useState(session.term.buffer.active.viewportY);
+  // Only re-renders on scroll; `clear` moves the viewport without a scroll event.
+  const [, setScrolled] = useState(0);
   const live = useRef({ ghost, menu });
   useEffect(() => {
     live.current = { ghost, menu };
@@ -110,7 +111,7 @@ export function Suggest({ session, paneId }: { session: TerminalSession; paneId:
     const subs = [
       session.term.onCursorMove(update),
       session.term.onWriteParsed(update),
-      session.term.onScroll(setViewport),
+      session.term.onScroll(setScrolled),
     ];
     window.addEventListener("nacre-complete", open);
     session.setKeyHook((e) => {
@@ -152,6 +153,7 @@ export function Suggest({ session, paneId }: { session: TerminalSession; paneId:
   }, [session, paneId, enabled]);
 
   const geo = geometry(session);
+  const viewport = session.term.buffer.active.viewportY;
   const input = menu ? session.commands.currentInput() : null;
   if (!geo) return null;
   const font = {

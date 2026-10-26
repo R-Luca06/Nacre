@@ -59,8 +59,8 @@ export function ClaudePanel() {
           <section>
             <div className="cp-title">{s.title ?? s.firstPrompt ?? t("Claude")}</div>
             <div className="sub">
-              {s.modelName ?? "—"} · {formatCost(s.costUsd, s.costExact)} · {s.prompts}{" "}
-              {t("prompts")}
+              {s.modelName ?? "—"} · {formatCost(s.costUsd, s.costExact)} ·{" "}
+              {t(s.prompts === 1 ? "1 prompt" : "{n} prompts", { n: s.prompts })}
             </div>
           </section>
           <section>

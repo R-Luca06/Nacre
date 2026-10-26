@@ -7,7 +7,8 @@ export function paneTitle(meta: PaneMeta | undefined): string {
   const proc = meta.proc;
   if (proc && !proc.isShell) {
     const fresh = meta.oscTitle && (meta.oscTitleAt ?? 0) > lastShellSeen(meta.id);
-    return fresh ? meta.oscTitle! : proc.name;
+    // Leading spinners and symbols (Claude Code's "✳ Claude Code") repeat the tab icon.
+    return fresh ? meta.oscTitle!.replace(/^[^\p{L}\p{N}~/.]+/u, "") || proc.name : proc.name;
   }
   return baseName(meta.cwd) || proc?.name || "";
 }
