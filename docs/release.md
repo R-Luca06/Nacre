@@ -7,4 +7,4 @@ Repository secrets:
 - `TAURI_SIGNING_PRIVATE_KEY`: contents of `~/.tauri/nacre-updater.key` (its public key is in `src-tauri/tauri.conf.json`).
 - `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`: empty for the generated key.
 
-To rotate the key: `npx tauri signer generate -w ~/.tauri/nacre-updater.key`, then update the public key in `tauri.conf.json` and the secret. Builds are not notarized; add an Apple Developer ID to the workflow for that.
+To rotate the key: `npx tauri signer generate -w ~/.tauri/nacre-updater.key`, then update the public key in `tauri.conf.json` and the secret. Builds are signed ad hoc (`signingIdentity: "-"`), not notarized: Gatekeeper asks for "Open Anyway" on first launch. An Apple Developer ID in the workflow removes that.

@@ -105,7 +105,7 @@ Les Réglages <kbd>⌘,</kbd> et `~/.config/nacre/config.toml` restent synchroni
 
 ## Installer
 
-Télécharge le `.dmg` depuis les [Releases](https://github.com/R-Luca06/Nacre/releases) et glisse Nacre dans Applications. L'app n'est pas encore notarisée : si macOS dit qu'elle est endommagée, lance une fois `xattr -cr /Applications/Nacre.app`. Les mises à jour s'installent ensuite depuis l'app.
+Télécharge le `.dmg` depuis les [Releases](https://github.com/R-Luca06/Nacre/releases) et glisse Nacre dans Applications. L'app n'est pas encore notarisée, donc macOS bloque le premier lancement : Réglages Système → Confidentialité et sécurité → Ouvrir quand même, ou lance une fois `xattr -cr /Applications/Nacre.app`. Les mises à jour s'installent ensuite depuis l'app.
 
 Pas encore de release ? `npm install && npm run bundle`, puis ouvre le `.dmg` dans `target/release/bundle/dmg`.
 

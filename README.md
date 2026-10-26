@@ -90,7 +90,7 @@ Settings <kbd>⌘,</kbd> and `~/.config/nacre/config.toml` stay in sync, comment
 
 ## Install
 
-Download the `.dmg` for your Mac from [Releases](https://github.com/R-Luca06/Nacre/releases) and drag Nacre to Applications. Builds are not notarized yet: if macOS says Nacre is damaged, run `xattr -cr /Applications/Nacre.app` once. Updates then install from the app.
+Download the `.dmg` for your Mac from [Releases](https://github.com/R-Luca06/Nacre/releases) and drag Nacre to Applications. Builds are not notarized yet, so macOS blocks the first launch: open System Settings → Privacy & Security → Open Anyway, or run `xattr -cr /Applications/Nacre.app` once. Updates then install from the app.
 
 No release yet? Build it: `npm install && npm run bundle`, then open the `.dmg` in `target/release/bundle/dmg`.
 
