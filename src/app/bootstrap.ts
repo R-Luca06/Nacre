@@ -156,8 +156,9 @@ export async function bootstrap() {
     const ops = await import("./ops");
     const registry = await import("../terminal/registry");
     const workspaces = await import("./workspaces");
+    const { actionById } = await import("./actions");
     Object.assign(window, {
-      __nacre: { ws: useWorkspace, config: useConfig, ops, registry, workspaces },
+      __nacre: { ws: useWorkspace, config: useConfig, ops, registry, workspaces, actionById },
     });
   }
 

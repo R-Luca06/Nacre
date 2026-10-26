@@ -13,10 +13,11 @@ import * as pty from "../ipc/pty";
 import { withAlpha } from "../themes/color";
 import { type Block, CommandTracker } from "./blocks";
 import { ClipboardAddon } from "@xterm/addon-clipboard";
-import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { copyText as writeText } from "../app/clipboard";
 import { invoke } from "@tauri-apps/api/core";
 import { fileLinkProvider } from "./fileLinks";
 import { LineScanner } from "./scanner";
+import { Recorder, parseCast, play } from "./recording";
 import { ANSI_NAMES } from "../themes/types";
 import type { HighlightRule, TriggerRule } from "../config/schema";
 
@@ -66,6 +67,8 @@ export interface SessionEvents {
 
 export interface LaunchOptions {
   integration?: boolean;
+  /** asciicast text to play instead of starting a shell. */
+  replay?: string;
   cwd?: string;
   shell?: string;
   args?: string[];
@@ -247,8 +250,47 @@ export class TerminalSession {
     }
   }
 
+  private recorder: Recorder | null = null;
+  private stopReplay: (() => void) | null = null;
+
+  get isReplay() {
+    return !!this.launch.replay;
+  }
+
+  get recording() {
+    return this.recorder !== null;
+  }
+
+  startRecording() {
+    this.recorder = new Recorder();
+  }
+
+  /** Returns the asciicast text. */
+  stopRecording(): string | null {
+    const r = this.recorder;
+    this.recorder = null;
+    return r ? r.toCast(this.term.cols, this.term.rows, this.launch.shell ?? "zsh") : null;
+  }
+
   private async start() {
     this.started = true;
+    if (this.launch.replay) {
+      try {
+        const cast = parseCast(this.launch.replay);
+        this.stopReplay = play(
+          cast,
+          (d) => this.term.write(d),
+          () => {
+            this.exited = { code: 0, signal: null };
+            this.term.write("\r\n\x1b[2m[end]\x1b[0m");
+          },
+        );
+      } catch (e) {
+        this.term.write(`\x1b[31m${String(e)}\x1b[0m\r\n`);
+        this.exited = { code: 1, signal: null };
+      }
+      return;
+    }
     try {
       this.pid = await pty.spawn(
         this.id,
@@ -265,6 +307,7 @@ export class TerminalSession {
   }
 
   private receive(data: Uint8Array) {
+    this.recorder?.push(data);
     const n = data.length;
     this.term.write(data, () => {
       this.unacked += n;
@@ -431,7 +474,8 @@ export class TerminalSession {
   }
 
   dispose() {
-    void pty.kill(this.id);
+    this.stopReplay?.();
+    if (!this.launch.replay) void pty.kill(this.id);
     this.detachWebgl();
     this.term.dispose();
     this.host.remove();

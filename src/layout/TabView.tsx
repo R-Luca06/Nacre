@@ -72,6 +72,7 @@ function PaneView(props: {
   const ai = useWorkspace((s) => (s.ai?.paneId === id ? s.ai : null));
   const mode = useWorkspace((s) => (s.mode?.paneId === id ? s.mode.kind : null));
   const trail = useConfig((s) => s.config.cursor.trail);
+  const recording = useWorkspace((s) => !!s.panes[id]?.recording);
   const dim = useConfig((s) => s.config.window.dim_inactive);
   const paneBar = useConfig(
     (s) => s.config.statusbar.enabled && s.config.statusbar.scope === "pane",
@@ -114,6 +115,7 @@ function PaneView(props: {
       {showActive && active && <div className="pane-edge" />}
       {searchOpen && <SearchBar paneId={id} />}
       {session && <StickyHeader session={session} />}
+      {recording && <div className="rec-badge">REC</div>}
       {ai && <AiBar key={`${ai.mode}:${ai.blockId ?? ""}`} {...ai} />}
       {session && trail && active && visible && <CursorTrail session={session} />}
       {session && mode === "hints" && <HintsOverlay session={session} />}

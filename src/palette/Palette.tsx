@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { actions, actionLabel } from "../app/actions";
-import { focusPane, newTab } from "../app/ops";
+import { focusPane, newTab, pasteText } from "../app/ops";
+import { clipboardHistory } from "../app/clipboard";
 import { useConfig } from "../store/config";
 import { openWorkspace, useWorkspaces } from "../app/workspaces";
 import { formatCombo } from "../keybindings/combo";
@@ -24,7 +25,7 @@ export interface PaletteItem {
   run: (alt: boolean) => void;
 }
 
-export type PaletteMode = "commands" | "history" | "dirs" | "snippets" | "ssh";
+export type PaletteMode = "commands" | "history" | "dirs" | "snippets" | "ssh" | "clipboard";
 
 /** Extra item sources for the command mode (profiles, workspaces, plugins…). */
 const sources: (() => PaletteItem[])[] = [];
@@ -121,6 +122,20 @@ async function load(mode: PaletteMode, query: string): Promise<PaletteItem[]> {
       }));
       return fuzzyFilter(items, query, (i) => `${i.label} ${i.detail}`);
     }
+    case "clipboard": {
+      const items = clipboardHistory().map((h, i) => ({
+        id: `c${i}`,
+        label: h.text.replace(/\s+/g, " ").slice(0, 200),
+        detail: h.text.includes("\n")
+          ? t("{n} lines", { n: h.text.split("\n").length })
+          : undefined,
+        run: () => {
+          const id = activeTab()?.active;
+          if (id) pasteText(id, h.text);
+        },
+      }));
+      return fuzzyFilter(items, query, (i) => i.label);
+    }
     case "ssh": {
       const hosts =
         await invoke<{ name: string; hostname: string | null; user: string | null }[]>("ssh_hosts");
@@ -144,6 +159,7 @@ const PLACEHOLDER: Record<PaletteMode, string> = {
   dirs: "Go to directory",
   snippets: "Snippets",
   ssh: "SSH hosts",
+  clipboard: "Clipboard history",
 };
 
 const EMPTY: Record<PaletteMode, string> = {
@@ -152,6 +168,7 @@ const EMPTY: Record<PaletteMode, string> = {
   dirs: "No directories yet",
   snippets: "Add snippets in config.toml under [snippets]",
   ssh: "No hosts in ~/.ssh/config",
+  clipboard: "Nothing copied yet",
 };
 
 export function Palette({ mode = "commands" }: { mode?: PaletteMode }) {
@@ -232,7 +249,11 @@ export function Palette({ mode = "commands" }: { mode?: PaletteMode }) {
               onMouseMove={() => setIndex(i)}
               onClick={(e) => choose(item, e.metaKey)}
             >
-              <span className={mode === "history" || mode === "snippets" ? "mono" : ""}>
+              <span
+                className={
+                  mode === "history" || mode === "snippets" || mode === "clipboard" ? "mono" : ""
+                }
+              >
                 {item.label}
               </span>
               {item.detail && <span className="palette-detail">{item.detail}</span>}

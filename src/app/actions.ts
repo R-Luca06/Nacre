@@ -8,6 +8,7 @@ import { saveLastAsSnippet } from "./snippets";
 import { invoke } from "@tauri-apps/api/core";
 import { setValue } from "../settings/fields";
 import { checkForUpdates } from "./updates";
+import { playRecording, toggleRecording } from "./recordings";
 import { useConfig } from "../store/config";
 import {
   copyOutput,
@@ -108,6 +109,8 @@ add("window.fullscreen", "Toggle Full Screen", "Window", ["ctrl+cmd+f"], () =>
 add("window.onTop", "Always on Top", "Window", [], () => ops.toggleAlwaysOnTop());
 add("window.quake", "Drop-down Terminal", "Window", [], () => invoke("quake_toggle"));
 add("app.update", "Check for Updates", "App", [], () => checkForUpdates(true));
+add("pane.record", "Record Pane", "Pane", [], () => toggleRecording());
+add("pane.play", "Play Recording…", "Pane", [], () => playRecording());
 add("app.secureInput", "Secure Keyboard Entry", "App", [], () =>
   setValue(["general", "secure_input"], !useConfig.getState().config.general.secure_input),
 );
@@ -143,7 +146,7 @@ add("view.zoomIn", "Bigger Text", "View", ["cmd+=", "cmd++", "shift+cmd+="], () 
 add("view.zoomOut", "Smaller Text", "View", ["cmd+-"], () => ops.zoomFont(-1));
 add("view.zoomReset", "Actual Size", "View", ["cmd+0"], () => ops.zoomFont("reset"));
 // Pickers
-const picker = (mode: "history" | "dirs" | "snippets" | "ssh") => {
+const picker = (mode: "history" | "dirs" | "snippets" | "ssh" | "clipboard") => {
   const o = ws().overlay;
   ws().setOverlay(o?.kind === "palette" && o.mode === mode ? null : { kind: "palette", mode });
 };
@@ -151,6 +154,7 @@ add("palette.history", "Search History", "App", ["shift+cmd+h"], () => picker("h
 add("palette.dirs", "Go to Directory", "App", ["shift+cmd+j"], () => picker("dirs"));
 add("palette.snippets", "Snippets", "App", ["shift+cmd+s"], () => picker("snippets"));
 add("palette.ssh", "SSH Hosts", "App", ["shift+cmd+r"], () => picker("ssh"));
+add("palette.clipboard", "Clipboard History", "App", ["shift+cmd+v"], () => picker("clipboard"));
 add("snippet.save", "Save Last Command as Snippet", "App", [], () => saveLastAsSnippet());
 
 // AI in the terminal

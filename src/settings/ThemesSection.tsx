@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { copyText as writeText } from "../app/clipboard";
 import { allThemes, useConfig } from "../store/config";
 import { saveTheme } from "../ipc/config";
 import { useWorkspace } from "../store/workspace";

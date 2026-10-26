@@ -1,4 +1,4 @@
-import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { copyText as writeText } from "./clipboard";
 import * as pty from "../ipc/pty";
 import type { ProcInfo } from "../ipc/pty";
 import { detectClaude, releasePane, sessionForPane } from "../claude/store";
@@ -33,6 +33,10 @@ export function sessionEvents(id: string): SessionEvents {
   return {
     onKey: (e) => handleKeyEvent(e),
     onInput: (data, session) => {
+      if (session.isReplay) {
+        if (data === "q" || session.exited) void closePane(id, true);
+        return true;
+      }
       if (session.exited) {
         void closePane(id, true);
         return true;

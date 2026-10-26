@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { Menu } from "@tauri-apps/api/menu";
-import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { copyText as writeText } from "../app/clipboard";
 import { t } from "../i18n";
 import { activeTab, useWorkspace } from "../store/workspace";
 import type { Block } from "./blocks";

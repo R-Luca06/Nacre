@@ -1,6 +1,7 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api/core";
-import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { readText } from "@tauri-apps/plugin-clipboard-manager";
+import { copyText as writeText } from "./clipboard";
 import { openPath } from "@tauri-apps/plugin-opener";
 import * as pty from "../ipc/pty";
 import {

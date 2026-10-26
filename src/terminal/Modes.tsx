@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { copyText as writeText } from "../app/clipboard";
 import { t } from "../i18n";
 import { useConfig } from "../store/config";
 import { useWorkspace } from "../store/workspace";

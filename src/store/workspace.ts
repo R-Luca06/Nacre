@@ -17,6 +17,7 @@ export interface PaneMeta {
   /** The shell reports its cwd via OSC 7; polling must not override it. */
   cwdFromOsc?: boolean;
   exited?: ExitInfo;
+  recording?: boolean;
   /** Profile the pane was opened with. */
   profile?: string;
   /** From shell integration (OSC 133). */
