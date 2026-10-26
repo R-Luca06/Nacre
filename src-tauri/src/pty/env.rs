@@ -19,6 +19,13 @@ const STRIPPED: &[&str] = &[
     "CLAUDE_CODE_ENTRYPOINT",
 ];
 
+pub fn resolve_shell(requested: Option<&str>) -> String {
+    requested
+        .filter(|s| !s.trim().is_empty())
+        .map(str::to_owned)
+        .unwrap_or_else(default_shell)
+}
+
 pub fn default_shell() -> String {
     // The account's login shell wins over $SHELL, which may be stale in GUI launches.
     unsafe {
@@ -46,14 +53,23 @@ pub fn build_command(
         .filter(|s| !s.trim().is_empty())
         .unwrap_or_else(default_shell);
     let mut cmd = CommandBuilder::new(&shell);
-    match &opts.args {
-        Some(args) => cmd.args(args),
-        None => cmd.arg("-l"),
-    }
-    if let Some(command) = opts.command.as_deref().filter(|c| !c.trim().is_empty()) {
-        // Run the startup command, then stay in an interactive shell.
-        cmd.arg("-c");
-        cmd.arg(format!("{command}; exec {} -l", shell_quote(&shell)));
+    let interactive: Vec<String> = opts
+        .args
+        .clone()
+        .or_else(|| opts.interactive_args.clone())
+        .unwrap_or_else(|| vec!["-l".into()]);
+    match opts.command.as_deref().filter(|c| !c.trim().is_empty()) {
+        Some(command) => {
+            // Run the startup command, then stay in an interactive shell.
+            let rest: Vec<String> = interactive.iter().map(|a| shell_quote(a)).collect();
+            cmd.args(["-l", "-c"]);
+            cmd.arg(format!(
+                "{command}; exec {} {}",
+                shell_quote(&shell),
+                rest.join(" ")
+            ));
+        }
+        None => cmd.args(&interactive),
     }
     if let Some(cwd) = cwd {
         cmd.cwd(cwd);

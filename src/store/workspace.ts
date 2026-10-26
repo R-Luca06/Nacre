@@ -50,6 +50,7 @@ export type Overlay =
   | { kind: "rename"; tabId: string }
   | { kind: "claude"; view?: "sessions" | "history" | "usage" }
   | { kind: "diff"; path: string; cwd: string | null }
+  | { kind: "filter"; paneId: string; blockId: number }
   | null;
 
 interface WorkspaceState {

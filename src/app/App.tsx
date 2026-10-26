@@ -9,6 +9,7 @@ import { Notice } from "./Notice";
 import { Toast } from "./Toast";
 import { Dashboard } from "../claude/Dashboard";
 import { ClaudePanel, DiffView } from "../claude/Panel";
+import { FilterView } from "../terminal/FilterView";
 import { StatusBar } from "../statusbar/StatusBar";
 import { useConfig } from "../store/config";
 import "./app.css";
@@ -49,6 +50,9 @@ export function App() {
             <Dashboard key={overlay.view ?? "sessions"} initial={overlay.view} />
           )}
           {overlay?.kind === "diff" && <DiffView path={overlay.path} cwd={overlay.cwd} />}
+          {overlay?.kind === "filter" && (
+            <FilterView paneId={overlay.paneId} blockId={overlay.blockId} />
+          )}
           <Notice />
           <Toast />
         </div>

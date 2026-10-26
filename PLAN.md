@@ -403,10 +403,10 @@ Chaque phase se termine par une app **qui compile, qui se lance et qui marche**.
 - [x] Assistant d'installation des hooks (fusion propre dans `~/.claude/settings.json`, avec sauvegarde)
 
 ### Phase 6 — Intégration shell et blocs (4.H)
-- [ ] Scripts zsh/bash/fish (OSC 7 + OSC 133) et injection automatique
-- [ ] Marqueurs, navigation de prompt en prompt, durée et statut par commande
-- [ ] Sélection/copie de l'output d'une commande
-- [ ] Blocs visuels (V3)
+- [x] Scripts zsh/bash/fish (OSC 7 + OSC 133) et injection automatique
+- [x] Marqueurs, navigation de prompt en prompt, durée et statut par commande
+- [x] Sélection/copie de l'output d'une commande
+- [x] Blocs visuels (V3)
 
 ### Phase 7 — Sessions, workspaces, profils (4.D V2, 4.K)
 - [ ] Sauvegarde/restauration de session
@@ -458,7 +458,9 @@ Chaque phase se termine par une app **qui compile, qui se lance et qui marche**.
 - 2026-10-26 · Phase 3 · `~/.config/nacre/config.toml` commenté généré au 1er lancement (défauts = source TS unique, testés), validation par champ avec message d'une ligne, rechargement à chaud (notify) config + `themes/*.toml`, 21 thèmes intégrés, chrome dérivé du thème, ligatures, zoom, menus natifs synchronisés avec les raccourcis, icône.
 - 2026-10-26 · Phase 4 · Barre d'état (fenêtre ou par pane, haut/bas), 4 styles (minimal, simple, powerline sans police spéciale, pills), segments cwd, git, heure, process, CPU, RAM, batterie, réseau, versions d'outils par projet, k8s, docker, AWS, venv, scripts perso (`[[statusbar.custom]]`, timeout + kill du groupe), niveaux de couleur, clics.
 - 2026-10-26 · Phase 5 · Formats vérifiés (transcripts locaux + doc hooks/status line). Hub Rust : hooks + status line via socket, lecture incrémentale des transcripts (usage dédoublonné par message, sous-agents exclus du contexte), tarifs officiels, fallback par process. CLI `nacre` (claude-event, statusline --wrap, notify, new-tab, split, send-text). Segments jauge/modèle/coût/état/limites 5 h-7 j, badges onglet + Dock, notifications si pane non visible, alerte de contexte, dashboard (sessions, historique + reprise, consommation par jour/projet/modèle), panneau latéral (tâches, fichiers + diff, graphique de contexte), assistant d'installation avec sauvegarde et désinstallation exacte (testé). Validé avec un vrai `claude -p` + `--settings` temporaire, sans toucher `~/.claude`.
+- 2026-10-26 · Phase 6 · Intégration shell sans toucher aux dotfiles : zsh via ZDOTDIR (restauré aussitôt), bash via --rcfile (émule le login), fish via XDG_DATA_DIRS. OSC 7 + OSC 133 (A/B/C/D + E pour le texte de la commande). Marques ✓/✗ dans la marge, ⌘↑/⌘↓ entre invites, durée et code dans la barre d'état, notification des longues commandes, copier/sélectionner/relancer la sortie, en-tête collant, filtre de sortie, partage Markdown/image, séparateurs de blocs (option), menu contextuel par bloc.
 
 ## 8. Problèmes ouverts
 
-_(aucun)_
+- Intégration fish non testée (fish absent de la machine de dev) ; syntaxe à valider.
+- Repli des blocs (V3) non faisable proprement : xterm.js ne permet pas de masquer des lignes du buffer. Remplacé par filtre + en-tête collant.

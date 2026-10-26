@@ -1,4 +1,4 @@
-mod env;
+pub mod env;
 
 use std::collections::HashMap;
 use std::io::{Read, Write};
@@ -27,6 +27,11 @@ pub struct SpawnOptions {
     pub args: Option<Vec<String>>,
     pub env: Option<HashMap<String, String>>,
     pub command: Option<String>,
+    /// Shell integration (OSC 7/133); on unless disabled.
+    pub integration: Option<bool>,
+    /// Set by the backend: how to start the interactive shell when `args` is unset.
+    #[serde(skip)]
+    pub interactive_args: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, Serialize)]

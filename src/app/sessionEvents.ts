@@ -10,6 +10,8 @@ import { activeTab, tabOfPane, useWorkspace } from "../store/workspace";
 import { getSession } from "../terminal/registry";
 import type { SessionEvents } from "../terminal/session";
 import { ring } from "./bell";
+import { invoke } from "@tauri-apps/api/core";
+import { fmtMs } from "../terminal/blocks";
 import { closePane, focusPane } from "./ops";
 
 const ws = () => useWorkspace.getState();
@@ -40,6 +42,20 @@ export function sessionEvents(id: string): SessionEvents {
     },
     onTitle: (title) => ws().updatePane(id, { oscTitle: title, oscTitleAt: Date.now() }),
     onCwd: (cwd) => ws().updatePane(id, { cwd, cwdFromOsc: true }),
+    onCommandFinished: (b) => {
+      const duration = (b.finishedAt ?? 0) - (b.startedAt ?? 0);
+      ws().updatePane(id, {
+        lastCommand: { command: b.command, duration, exitCode: b.exitCode, at: Date.now() },
+      });
+      const after = useConfig.getState().config.terminal.notify_after;
+      if (after > 0 && duration >= after * 1000 && !isVisible(id)) {
+        const cmd = (b.command ?? "").split("\n")[0].slice(0, 80);
+        void invoke("notify", {
+          title: b.exitCode ? t("Command failed") : t("Command finished"),
+          body: `${cmd} · ${fmtMs(duration)}`,
+        }).catch(() => {});
+      }
+    },
     onFocus: () => {
       const tab = tabOfPane(id);
       if (tab && tab.active !== id) focusPane(id);

@@ -72,6 +72,30 @@ pub async fn git_diff(cwd: String, path: String) -> Result<String, String> {
     Ok(diff.unwrap_or_default())
 }
 
+/// Saves a file to ~/Downloads without overwriting; returns its path.
+#[tauri::command]
+pub async fn save_download(name: String, base64: String) -> Result<String, String> {
+    use base64::Engine;
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(base64)
+        .map_err(|e| e.to_string())?;
+    let home = std::env::var("HOME").map_err(|e| e.to_string())?;
+    let dir = std::path::Path::new(&home).join("Downloads");
+    let safe: String = name
+        .chars()
+        .map(|c| if c == '/' || c == '\0' { '-' } else { c })
+        .collect();
+    let mut path = dir.join(&safe);
+    let mut n = 1;
+    while path.exists() {
+        let (stem, ext) = safe.rsplit_once('.').unwrap_or((&safe, ""));
+        path = dir.join(format!("{stem}-{n}.{ext}"));
+        n += 1;
+    }
+    std::fs::write(&path, bytes).map_err(|e| e.to_string())?;
+    Ok(path.to_string_lossy().into_owned())
+}
+
 /// Environment of the pane's shell (e.g. `AWS_PROFILE`, `VIRTUAL_ENV`).
 #[tauri::command]
 pub async fn pane_env(

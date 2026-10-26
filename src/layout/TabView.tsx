@@ -7,6 +7,8 @@ import { focusPane } from "../app/ops";
 import { SearchBar } from "../terminal/SearchBar";
 import { t } from "../i18n";
 import { StatusBar } from "../statusbar/StatusBar";
+import { StickyHeader } from "../terminal/StickyHeader";
+import { showContextMenu } from "../terminal/blockActions";
 
 const pct = (n: number) => `${n * 100}%`;
 
@@ -63,6 +65,7 @@ function PaneView(props: {
   const { id, rect, visible, active, showActive } = props;
   const ref = useRef<HTMLDivElement>(null);
   const searchOpen = useWorkspace((s) => s.search === id);
+  const session = getSession(id);
   const dim = useConfig((s) => s.config.window.dim_inactive);
   const paneBar = useConfig(
     (s) => s.config.statusbar.enabled && s.config.statusbar.scope === "pane",
@@ -94,10 +97,16 @@ function PaneView(props: {
       onMouseDown={() => {
         if (!active) focusPane(id);
       }}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        const s = getSession(id);
+        if (s) void showContextMenu(s, e.nativeEvent);
+      }}
     >
       <div className="pane-dim" />
       {showActive && active && <div className="pane-edge" />}
       {searchOpen && <SearchBar paneId={id} />}
+      {session && <StickyHeader session={session} />}
       {paneBar && <StatusBar paneId={id} />}
     </div>
   );

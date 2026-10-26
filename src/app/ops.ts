@@ -52,6 +52,7 @@ export function defaultLaunch(cwd?: string): LaunchOptions {
     shell: c.shell.program || undefined,
     args: c.shell.args.length ? c.shell.args : undefined,
     env: Object.keys(c.shell.env).length ? c.shell.env : undefined,
+    integration: c.shell.integration,
   };
 }
 

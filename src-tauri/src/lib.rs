@@ -4,6 +4,7 @@ mod config;
 mod ipc_socket;
 mod process;
 mod pty;
+mod shell_integration;
 mod system;
 
 use tauri::{Manager, RunEvent, WindowEvent};
@@ -16,6 +17,8 @@ use process::ProcessInspector;
 pub struct AppPaths {
     pub socket: PathBuf,
     pub cli: PathBuf,
+    /// Shell integration scripts.
+    pub shell: PathBuf,
 }
 
 fn cli_path() -> PathBuf {
@@ -39,11 +42,20 @@ pub fn run() {
         .manage(ipc_socket::DebugState::default())
         .manage(claude::ClaudeHub::new())
         .manage(claude::history::HistoryCache::default())
-        .manage(AppPaths {
-            socket: ipc_socket::socket_path(),
-            cli: cli_path(),
-        })
         .setup(|app| {
+            let data = app
+                .path()
+                .app_data_dir()
+                .unwrap_or_else(|_| std::env::temp_dir().join("nacre"));
+            let shell = shell_integration::default_dir(data);
+            if let Err(e) = shell_integration::install(&shell) {
+                eprintln!("nacre: shell integration unavailable: {e}");
+            }
+            app.manage(AppPaths {
+                socket: ipc_socket::socket_path(),
+                cli: cli_path(),
+                shell,
+            });
             if let Err(e) = ipc_socket::start(app.handle().clone()) {
                 eprintln!("nacre: socket unavailable: {e}");
             }
@@ -88,6 +100,7 @@ pub fn run() {
             commands::window::window_new,
             commands::window::pane_focus,
             commands::system::git_diff,
+            commands::system::save_download,
             commands::window::window_ready,
             ipc_socket::debug::debug_result,
         ])

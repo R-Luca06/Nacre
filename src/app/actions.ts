@@ -3,6 +3,13 @@ import type { Bindings } from "../keybindings/keymap";
 import { useWorkspace } from "../store/workspace";
 import * as ops from "./ops";
 import { connectClaude, disconnectClaude } from "../claude/install";
+import {
+  copyOutput,
+  jumpPrompt,
+  lastBlockAction,
+  rerun,
+  selectOutput,
+} from "../terminal/blockActions";
 
 export interface Action {
   id: string;
@@ -88,6 +95,13 @@ add("edit.paste", "Paste", "Edit", ["cmd+v"], () => ops.paste(), true);
 add("edit.selectAll", "Select All", "Edit", ["cmd+a"], () => ops.selectAll(), true);
 add("edit.clear", "Clear", "Edit", ["shift+cmd+k"], () => ops.clearScreen());
 add("edit.find", "Find", "Edit", ["cmd+f"], () => ops.openSearch());
+add("prompt.prev", "Previous Prompt", "Edit", ["cmd+arrowup"], () => jumpPrompt(-1));
+add("prompt.next", "Next Prompt", "Edit", ["cmd+arrowdown"], () => jumpPrompt(1));
+add("block.copyOutput", "Copy Last Output", "Edit", ["shift+cmd+o"], () =>
+  lastBlockAction(copyOutput),
+);
+add("block.selectOutput", "Select Last Output", "Edit", [], () => lastBlockAction(selectOutput));
+add("block.rerun", "Run Last Command Again", "Edit", [], () => lastBlockAction(rerun));
 add("edit.scrollTop", "Scroll to Top", "Edit", ["cmd+home"], () => ops.scroll("top"));
 add("edit.scrollBottom", "Scroll to Bottom", "Edit", ["cmd+end"], () => ops.scroll("bottom"));
 add("edit.pageUp", "Page Up", "Edit", ["shift+pageup"], () => ops.scroll("pageUp"), true);

@@ -367,3 +367,110 @@ svg {
 .main > .workspace {
   min-width: 0;
 }
+
+/* Shell integration marks */
+
+.term-host .prompt-mark {
+  margin-left: -6px;
+  width: 2px !important;
+  border-radius: 1px;
+  pointer-events: auto;
+}
+
+.term-host .prompt-mark.ok {
+  background: var(--ok);
+  opacity: 0.55;
+}
+
+.term-host .prompt-mark.fail {
+  background: var(--danger);
+}
+
+.term-host .prompt-mark.running {
+  background: var(--accent);
+}
+
+.term-host .block-sep {
+  pointer-events: none;
+  border-top: 1px solid var(--line);
+}
+
+.sticky-head {
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  height: 22px;
+  padding: 0 12px;
+  align-items: center;
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--line);
+  font: 11px var(--mono-font);
+  color: var(--text-dim);
+  text-align: left;
+}
+
+.sticky-head .cmd {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.sticky-head.fail .meta {
+  color: var(--danger);
+}
+
+.filter {
+  align-self: flex-start;
+  margin-top: 48px;
+  width: min(820px, calc(100% - 32px));
+  max-height: calc(100% - 96px);
+  display: flex;
+  flex-direction: column;
+}
+
+.filter header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 8px 0 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.filter header input {
+  flex: 1;
+  border: 0;
+  outline: none;
+  background: none;
+  font-size: 13px;
+}
+
+.filter .cmd {
+  padding: 6px 14px;
+  font-family: var(--mono-font);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filter pre {
+  margin: 0;
+  overflow: auto;
+  padding: 4px 0 8px;
+  font: 12px/1.5 var(--mono-font);
+}
+
+.filter pre > div {
+  padding: 0 14px;
+  white-space: pre;
+}
+
+.filter pre > div:hover {
+  background: var(--bg-hover);
+}

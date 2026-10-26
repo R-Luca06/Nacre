@@ -16,17 +16,24 @@ pub fn pty_spawn(
     pty: State<'_, PtyManager>,
     paths: State<'_, crate::AppPaths>,
     id: String,
-    opts: SpawnOptions,
+    mut opts: SpawnOptions,
     on_data: Channel<InvokeResponseBody>,
     on_exit: Channel<ExitInfo>,
 ) -> Result<u32, String> {
-    let env = vec![
+    let mut env = vec![
         (
             "NACRE_SOCKET".into(),
             paths.socket.to_string_lossy().into_owned(),
         ),
         ("NACRE_BIN".into(), paths.cli.to_string_lossy().into_owned()),
     ];
+    if opts.integration != Some(false) && opts.args.is_none() {
+        let shell = crate::pty::env::resolve_shell(opts.shell.as_deref());
+        if let Some(inj) = crate::shell_integration::injection(&paths.shell, &shell) {
+            env.extend(inj.env);
+            opts.interactive_args = inj.args;
+        }
+    }
     pty.spawn(id, webview.label().to_owned(), opts, env, on_data, on_exit)
 }
 

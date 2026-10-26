@@ -9,6 +9,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import "@xterm/xterm/css/xterm.css";
 import * as pty from "../ipc/pty";
 import { withAlpha } from "../themes/color";
+import { type Block, CommandTracker } from "./blocks";
 
 export interface TerminalSettings {
   fontFamily: string;
@@ -21,6 +22,8 @@ export interface TerminalSettings {
   optionAsMeta: "none" | "left" | "right" | "both";
   copyOnSelect: boolean;
   ligatures: boolean;
+  promptMarks: boolean;
+  blockSeparators: boolean;
   padding: number;
   theme: ITheme;
 }
@@ -30,6 +33,7 @@ export interface SessionEvents {
   /** Intercepts user input; return true when handled (e.g. broadcast). */
   onInput?: (data: string, session: TerminalSession) => boolean;
   onCwd?: (cwd: string) => void;
+  onCommandFinished?: (block: Block) => void;
   onTitle?: (title: string) => void;
   onBell?: () => void;
   onOutput?: () => void;
@@ -39,6 +43,7 @@ export interface SessionEvents {
 }
 
 export interface LaunchOptions {
+  integration?: boolean;
   cwd?: string;
   shell?: string;
   args?: string[];
@@ -65,6 +70,7 @@ export class TerminalSession {
   private settings: TerminalSettings;
   private launch: LaunchOptions;
   private searchListeners = new Set<(index: number, count: number) => void>();
+  readonly commands: CommandTracker;
   exited: pty.ExitInfo | null = null;
   pid = 0;
 
@@ -102,6 +108,12 @@ export class TerminalSession {
     this.term.attachCustomKeyEventHandler((e) => this.handleKey(e));
     this.term.onData((d) => this.input(d));
     this.term.onBinary((d) => this.input(d));
+    this.commands = new CommandTracker(
+      this.term,
+      () => ({ marks: this.settings.promptMarks, separators: this.settings.blockSeparators }),
+      (b) => this.events.onCommandFinished?.(b),
+    );
+    this.term.parser.registerOscHandler(133, (data) => this.commands.handle(data));
     this.term.parser.registerOscHandler(7, (data) => {
       const cwd = parseOsc7(data);
       if (cwd) this.events.onCwd?.(cwd);
@@ -247,7 +259,11 @@ export class TerminalSession {
   }
 
   update(settings: TerminalSettings) {
+    const marksChanged =
+      settings.promptMarks !== this.settings.promptMarks ||
+      settings.blockSeparators !== this.settings.blockSeparators;
     this.settings = settings;
+    if (marksChanged) this.commands.refreshDecorations();
     Object.assign(this.term.options, this.xtermOptions(settings));
     this.syncLigatures();
     this.host.style.padding = `${settings.padding}px`;

@@ -8,6 +8,7 @@ export interface SpawnOptions {
   args?: string[];
   env?: Record<string, string>;
   command?: string;
+  integration?: boolean;
 }
 
 export interface ExitInfo {

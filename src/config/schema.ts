@@ -10,6 +10,7 @@ export const defaults = {
   },
   shell: {
     program: "",
+    integration: true,
     args: [] as string[],
     cwd: "~",
     env: {} as Record<string, string>,
@@ -42,6 +43,10 @@ export const defaults = {
     copy_on_select: false,
     paste_warning: true,
     bell: "visual" as "none" | "visual" | "sound" | "notify",
+    prompt_marks: true,
+    block_separators: false,
+    /** Notify when a command running this many seconds ends out of sight; 0 disables. */
+    notify_after: 10,
   },
   statusbar: {
     enabled: true,
@@ -95,6 +100,7 @@ const rules: Record<string, Rule> = {
   "terminal.scrollback": { min: 0, max: 1_000_000, int: true },
   "terminal.option_as_meta": { enum: ["none", "left", "right", "both"] },
   "terminal.bell": { enum: ["none", "visual", "sound", "notify"] },
+  "terminal.notify_after": { min: 0, max: 86400 },
   "claude.context_warn": { min: 1, max: 100 },
   "claude.context_danger": { min: 1, max: 100 },
   "claude.context_alert": { min: 1, max: 100 },

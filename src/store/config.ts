@@ -90,6 +90,8 @@ export function terminalSettings(s = useConfig.getState(), theme?: Theme): Termi
     optionAsMeta: c.terminal.option_as_meta,
     copyOnSelect: c.terminal.copy_on_select,
     ligatures: c.font.ligatures,
+    promptMarks: c.terminal.prompt_marks,
+    blockSeparators: c.terminal.block_separators,
     padding: c.window.padding,
     theme: xtermTheme(theme ?? activeTheme(s)),
   };
