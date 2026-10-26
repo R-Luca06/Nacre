@@ -83,6 +83,7 @@ function General() {
       <Toggle path={["general", "tray"]} label={t("Menu bar icon")} />
       <Toggle path={["general", "launch_at_login"]} label={t("Open at login")} />
       <Toggle path={["general", "secure_input"]} label={t("Secure Keyboard Entry")} />
+      <Toggle path={["general", "check_updates"]} label={t("Check for updates")} />
       <div className="set-group-title">{t("Drop-down Terminal")}</div>
       <Toggle path={["quake", "enabled"]} label={t("Enable")} />
       <TextField path={["quake", "shortcut"]} label={t("Global shortcut")} placeholder="ctrl+`" />

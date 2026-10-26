@@ -429,11 +429,11 @@ Chaque phase se termine par une app **qui compile, qui se lance et qui marche**.
 - [x] API plugins
 
 ### Phase 10 — Finitions et distribution (4.P)
-- [ ] Transparence/flou, image de fond, effets fun
-- [ ] Mode Quake, icône de barre des menus
-- [ ] Build `.dmg`, updater
-- [ ] Optimisation des performances (benchmark : `cat` d'un gros fichier, 20 onglets ouverts)
-- [ ] Documentation utilisateur (`docs/`)
+- [x] Transparence/flou, image de fond, effets fun
+- [x] Mode Quake, icône de barre des menus
+- [x] Build `.dmg`, updater
+- [x] Optimisation des performances (benchmark : `cat` d'un gros fichier, 20 onglets ouverts)
+- [x] Documentation utilisateur (`docs/`)
 
 ---
 
@@ -462,6 +462,7 @@ Chaque phase se termine par une app **qui compile, qui se lance et qui marche**.
 - 2026-10-26 · Phase 7 · Restauration de session (fenêtres, position, onglets, splits, dossiers, scrollback coloré, thème d'onglet) avec sauvegarde continue. Workspaces en fichiers TOML (préréglages ou arbre explicite, commandes de démarrage, dossiers relatifs), ouverture depuis la palette, « enregistrer la fenêtre comme workspace ». Profils (shell, dossier, env, commande, thème, police) + attribution auto par dossier ou hôte SSH. Réglages graphiques synchronisés avec config.toml (commentaires préservés), sélecteur de thèmes, éditeur avec aperçu, import iTerm2/Base16/Windows Terminal/Ghostty/Alacritty, export, import/export de la config, éditeur de raccourcis (capture, accords, conflits, réinitialisation), thème par onglet, thème d'interface indépendant.
 - 2026-10-26 · Phase 8 · IA via `claude -p` (abonnement réutilisé, sans outils, sans session persistée, format stream-json vérifié) ou clé API optionnelle dans le trousseau macOS (HTTP direct, fallbacks de refus). ⌘K texte → commande avec Insérer/Exécuter et alerte sur les commandes risquées, expliquer l'erreur, résumer une sortie, proposer une correction (auto en option), panneau de chat avec contexte au choix (dossier, dernière commande, écran). Réponses dans la langue de l'interface.
 - 2026-10-26 · Phase 9 · Palette multi-modes : historique global persistant (toutes sessions), dossiers récents (frecency façon zoxide), snippets à paramètres `{{x:défaut}}`, hôtes `~/.ssh/config` (Include gérés). Surlignage regex et déclencheurs (notification, son, commande, marque), sélection au double-clic configurable, chemins `fichier:ligne` cliquables vers l'éditeur, OSC 52 (écriture seule), glisser-déposer de fichiers, export texte/HTML, mode hints façon Kitty, mode copie façon vim. API de plugins JS v1 (segments, commandes, thèmes, déclencheurs, fin de commande) avec rechargement à chaud et activation dans les réglages (`docs/plugins.md`).
+- 2026-10-26 · Phase 10 · Opacité, flou (vibrancy), image ou dégradé de fond, effets scanlines/glow/CRT, traînée de curseur. Terminal déroulant (raccourci global), icône de barre des menus (nouvelle fenêtre, workspaces, sessions Claude en attente), lancement à la connexion, saisie clavier sécurisée. `.dmg` construit (app 9,7 Mo, dmg 5 Mo, CLI embarquée), updater signé (GitHub Releases, clé dans `~/.tauri/`), workflows CI et release (macOS arm64/x64, Linux). Benchmark : 33 Mo / 400 000 lignes colorées en 1,74 s ; 21 onglets à 24 ms chacun, bascule ~30 ms, WebGL libéré pour les onglets cachés, backend 65 Mo. Correctif : le bloc d'une commande longue survit au rognage du scrollback. Docs utilisateur dans `docs/`.
 
 ## 8. Problèmes ouverts
 

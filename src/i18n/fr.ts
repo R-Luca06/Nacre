@@ -50,6 +50,13 @@ export const fr: Record<string, string> = {
   "Menu bar icon": "Icône dans la barre des menus",
   "Open at login": "Ouvrir à la connexion",
   Enable: "Activer",
+  "Check for Updates": "Rechercher des mises à jour",
+  "Check for updates": "Rechercher des mises à jour",
+  "Nacre is up to date.": "Nacre est à jour.",
+  "Nacre {version} is available. Click to install.":
+    "Nacre {version} est disponible. Clique pour l'installer.",
+  "Downloading…": "Téléchargement…",
+  "Update check failed: {error}": "Vérification impossible : {error}",
   "Global shortcut": "Raccourci global",
   Height: "Hauteur",
   "Hide when unfocused": "Masquer en perdant le focus",

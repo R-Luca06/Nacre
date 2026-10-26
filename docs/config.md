@@ -1,0 +1,36 @@
+# Configuration
+
+`~/.config/nacre/config.toml` is created on first launch with every default commented out. Uncomment a line to change it; saving applies it at once. Settings (⌘,) edit the same file and keep your comments. An invalid value falls back to its default and shows a one-line error.
+
+| Section             | Keys                                                                                                                                                                                                                       |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `[general]`         | `language` (auto, en, fr) · `confirm_close` · `restore_session` · `restore_scrollback` (lines) · `editor` (`code -g {file}:{line}:{col}`) · `tray` · `launch_at_login` · `secure_input` · `check_updates`                  |
+| `[shell]`           | `program` · `args` · `cwd` · `env` · `integration`                                                                                                                                                                         |
+| `[font]`            | `family` · `size` · `line_height` · `letter_spacing` · `ligatures`                                                                                                                                                         |
+| `[theme]`           | `mode` (dark, light, system) · `dark` · `light` · `ui` (chrome theme, empty follows the terminal)                                                                                                                          |
+| `[cursor]`          | `style` (block, bar, underline) · `blink` · `trail`                                                                                                                                                                        |
+| `[window]`          | `padding` · `dim_inactive` · `opacity` · `blur` · `background_image` · `background_image_opacity` · `background_gradient` · `effect` (none, scanlines, glow, crt)                                                          |
+| `[terminal]`        | `scrollback` · `option_as_meta` (none, left, right, both) · `copy_on_select` · `paste_warning` · `bell` (none, visual, sound, notify) · `prompt_marks` · `word_separators` · `block_separators` · `notify_after` (seconds) |
+| `[statusbar]`       | `enabled` · `position` · `scope` (window, pane) · `style` (minimal, simple, powerline, pills) · `left` · `center` · `right` · `time_format` · `[[statusbar.custom]]`                                                       |
+| `[claude]`          | `context_warn` · `context_danger` · `context_alert` · `notify` · `sound` · `dock_badge`                                                                                                                                    |
+| `[ai]`              | `provider` (claude-code, api) · `model` · `chat_model` · `claude_path` · `auto_fix`                                                                                                                                        |
+| `[quake]`           | `enabled` · `shortcut` · `height` · `hide_on_blur`                                                                                                                                                                         |
+| `[keys]`            | `"action.id" = "cmd+t"` or a list; `""` unbinds; chords: `"ctrl+a d"`                                                                                                                                                      |
+| `[snippets]`        | `"name" = "ssh {{host}} -p {{port:22}}"`                                                                                                                                                                                   |
+| `[profiles.<name>]` | see [workspaces.md](workspaces.md)                                                                                                                                                                                         |
+| `[[highlight]]`     | `regex` · `color` · `background` (ANSI name or `#hex`)                                                                                                                                                                     |
+| `[[triggers]]`      | `regex` · `action` (notify, sound, command, mark) · `command` (`$1` = first group)                                                                                                                                         |
+| `[plugins]`         | `disabled`                                                                                                                                                                                                                 |
+
+## Status bar segments
+
+`cwd` `git` `time` `process` `cpu` `mem` `battery` `net` `tools` `kube` `docker` `aws` `venv` `claude` (= state, model, context, cost) `claude.state` `claude.model` `claude.context` `claude.cost` `claude.limits` `claude.duration` `custom:<name>` `plugin.<id>`
+
+```toml
+[[statusbar.custom]]
+name = "load"
+command = "sysctl -n vm.loadavg"
+interval = 10           # seconds
+warn = "^\\{ [2-9]"     # regex on the output
+click = "top"           # typed in the pane on click
+```

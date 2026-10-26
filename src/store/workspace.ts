@@ -80,7 +80,13 @@ interface WorkspaceState {
   overlay: Overlay;
   /** Pane whose search bar is open. */
   search: string | null;
-  toast: { id: number; text: string; level: "info" | "warn"; tabId?: string } | null;
+  toast: {
+    id: number;
+    text: string;
+    level: "info" | "warn";
+    tabId?: string;
+    onClick?: () => void;
+  } | null;
   /** Side panel shown next to the panes. */
   panel: "claude" | "chat" | null;
   togglePanel: (p: "claude" | "chat") => void;
@@ -90,7 +96,7 @@ interface WorkspaceState {
   /** AI bar shown at the bottom of a pane. */
   ai: AiRequestState | null;
   setAi: (a: AiRequestState | null) => void;
-  showToast: (text: string, level?: "info" | "warn", tabId?: string) => void;
+  showToast: (text: string, level?: "info" | "warn", tabId?: string, onClick?: () => void) => void;
   setTabs: (tabs: Tab[], activeTabId?: string) => void;
   updateTab: (id: string, patch: Partial<Tab>) => void;
   setActiveTab: (id: string) => void;
@@ -117,12 +123,15 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
   setMode: (mode) => set({ mode }),
   setAi: (ai) => set({ ai }),
   togglePanel: (p) => set((s) => ({ panel: s.panel === p ? null : p })),
-  showToast: (text, level = "info", tabId) => {
+  showToast: (text, level = "info", tabId, onClick) => {
     const id = Date.now();
-    set({ toast: { id, text, level, tabId } });
-    setTimeout(() => {
-      if (get().toast?.id === id) set({ toast: null });
-    }, 5000);
+    set({ toast: { id, text, level, tabId, onClick } });
+    setTimeout(
+      () => {
+        if (get().toast?.id === id) set({ toast: null });
+      },
+      onClick ? 15000 : 5000,
+    );
   },
   setTabs: (tabs, activeTabId) => set((s) => ({ tabs, activeTabId: activeTabId ?? s.activeTabId })),
   updateTab: (id, patch) =>

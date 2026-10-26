@@ -6,7 +6,7 @@
   "build": {
     "beforeDevCommand": "npm run build:cli && npm run dev:web",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "npm run build:web",
+    "beforeBuildCommand": "npm run build:web && node scripts/sidecar.mjs release",
     "frontendDist": "../dist"
   },
   "app": {
@@ -29,6 +29,19 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "externalBin": ["binaries/nacre"],
+    "category": "DeveloperTool",
+    "copyright": "Nacre contributors",
+    "shortDescription": "Terminal built around Claude Code",
+    "macOS": {
+      "minimumSystemVersion": "12.0"
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEI3MEU2ODI2NEQxOTFCMjgKUldRb0d4bE5KbWdPdHg0NzJXRVhYa0NRNTdJd2paYm5xV3NKcWlkaytNU2svSFArejVKdTFXdzEK",
+      "endpoints": ["https://github.com/R-Luca06/Nacre/releases/latest/download/latest.json"]
+    }
   }
 }

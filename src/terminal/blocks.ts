@@ -59,9 +59,9 @@ export class CommandTracker {
       case "A": {
         const prompt = this.term.registerMarker(0);
         if (!prompt) return true;
+        this.prune();
         const b: Block = { id: this.next++, prompt, decorations: [] };
         this.blocks.push(b);
-        this.prune();
         this.decorate(b);
         break;
       }
@@ -93,7 +93,11 @@ export class CommandTracker {
   }
 
   private prune() {
-    while (this.blocks.length > MAX_BLOCKS || this.blocks[0]?.prompt.isDisposed) {
+    // The newest block survives even when its prompt scrolled out: it may still be running.
+    while (
+      this.blocks.length > 1 &&
+      (this.blocks.length > MAX_BLOCKS || this.blocks[0].prompt.isDisposed)
+    ) {
       const b = this.blocks.shift();
       b?.decorations.forEach((d) => d.dispose());
     }

@@ -16,6 +16,8 @@ export const defaults = {
     launch_at_login: false,
     /** Secure Keyboard Entry while Nacre is focused. */
     secure_input: false,
+    /** Look for a new version at launch (once a day). */
+    check_updates: true,
     /** Lines of scrollback kept per pane across restarts; 0 disables. */
     restore_scrollback: 1000,
   },

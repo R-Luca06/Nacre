@@ -11,6 +11,7 @@ export function Toast() {
       onClick={() => {
         if (toast.tabId) selectTab(toast.tabId);
         useWorkspace.setState({ toast: null });
+        toast.onClick?.();
       }}
     >
       {toast.text}

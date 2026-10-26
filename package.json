@@ -8,13 +8,13 @@
     "dev:web": "vite",
     "build": "npm run build:web && cargo build --workspace",
     "build:web": "tsc -p tsconfig.json && tsc -p tsconfig.node.json && vite build",
-    "bundle": "tauri build",
+    "bundle": "tauri build --bundles app,dmg",
     "test": "vitest run && cargo test --workspace",
     "lint": "eslint . && prettier --check . && cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings",
     "format": "prettier --write . && cargo fmt --all",
     "tauri": "tauri",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
-    "build:cli": "cargo build -p nacre-cli"
+    "build:cli": "node scripts/sidecar.mjs debug"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.3.0",
@@ -24,6 +24,8 @@
     "@tauri-apps/plugin-clipboard-manager": "^2.5.0",
     "@tauri-apps/plugin-notification": "^2.7.0",
     "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-process": "^2.4.0",
+    "@tauri-apps/plugin-updater": "^2.14.0",
     "@xterm/addon-clipboard": "^0.2.0",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/addon-image": "^0.9.0",

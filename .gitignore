@@ -6,3 +6,5 @@ src-tauri/gen/schemas
 *.log
 .env
 *.local
+src-tauri/binaries/
+release/

@@ -26,6 +26,7 @@ import { initDragDrop } from "./dragDrop";
 import { initPlugins } from "../plugins/host";
 import { applyAppearance } from "./appearance";
 import { initSystem, isQuake } from "./system";
+import { autoCheck } from "./updates";
 import { initPaths } from "./paths";
 import { initMenu, refreshMenu } from "./menu";
 import { initClaude } from "../claude/integration";
@@ -141,6 +142,7 @@ export async function bootstrap() {
   startProcessPolling();
   if (!isQuake()) startAutosave();
   initSystem();
+  autoCheck();
 
   useWorkspace.subscribe((s, prev) => {
     if (s.activeTabId !== prev.activeTabId || s.panes !== prev.panes) {
