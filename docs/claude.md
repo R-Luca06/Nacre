@@ -8,7 +8,7 @@ Connecting adds hooks to `~/.claude/settings.json` (a backup is written next to 
 - **Tabs and Dock**: a dot when Claude is done or needs you; the Dock shows how many sessions wait.
 - **Notifications**: only when the pane is not on screen.
 - **Sessions** (⇧⌘C): every live session; click to jump to it. History: resume any past session. Usage: cost per day, project and model (estimated from transcripts).
-- **Panel** (⌃⌘C): live todo list, files changed (click for the diff), context over time.
+- **Panel** (⌃⌘C): files changed (click for the diff), context over time, and the todo list when the session keeps one.
 - **Claude in a split** (⌥⌘C).
 
 Without hooks, Nacre still finds sessions by watching for the `claude` process and reading its transcript.
