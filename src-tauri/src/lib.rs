@@ -23,6 +23,8 @@ pub struct AppPaths {
     pub cli: PathBuf,
     /// Shell integration scripts.
     pub shell: PathBuf,
+    /// Output of panes with scrollback on disk.
+    pub logs: PathBuf,
 }
 
 fn cli_path() -> PathBuf {
@@ -65,10 +67,18 @@ pub fn run() {
             if let Err(e) = shell_integration::install(&shell) {
                 eprintln!("nacre: shell integration unavailable: {e}");
             }
+            let logs = app
+                .path()
+                .app_cache_dir()
+                .unwrap_or_else(|_| std::env::temp_dir().join("nacre"))
+                .join("scrollback");
+            // Panes never outlive the app: whatever is left is from a previous run.
+            let _ = std::fs::remove_dir_all(&logs);
             app.manage(AppPaths {
                 socket: ipc_socket::socket_path(),
                 cli: cli_path(),
                 shell,
+                logs,
             });
             if let Err(e) = ipc_socket::start(app.handle().clone()) {
                 eprintln!("nacre: socket unavailable: {e}");
@@ -98,6 +108,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::pty_spawn,
             commands::pty_detach,
+            commands::pty_log_files,
             commands::pty_attach,
             commands::session_stash,
             commands::window::windows_list,

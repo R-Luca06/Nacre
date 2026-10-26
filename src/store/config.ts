@@ -106,6 +106,7 @@ export function terminalSettings(s = useConfig.getState(), theme?: Theme): Termi
     wordSeparators: c.terminal.word_separators,
     transparent: seeThrough(c),
     images: c.terminal.images,
+    scrollbackDisk: c.terminal.scrollback_disk,
     maskSecrets: c.terminal.mask_secrets,
     screenReader: c.terminal.screen_reader,
     minimumContrast: c.terminal.minimum_contrast,

@@ -449,6 +449,19 @@ export function paneToNextTab() {
   focusPane(id);
 }
 
+/** Everything the pane printed, from its file on disk, in `less`. */
+export async function openFullScrollback() {
+  const id = activePaneId();
+  if (!id) return;
+  const files = await invoke<string[]>("pty_log_files", { id });
+  if (!files.length) {
+    ws().showToast(t("Turn on Scrollback on disk in Settings first."));
+    return;
+  }
+  const q = (p: string) => `'${p.replace(/'/g, `'\\''`)}'`;
+  await newTab({ command: `cat ${files.map(q).join(" ")} | less -R +G`, after: activeTab()?.id });
+}
+
 export function renameTab(id: string, title: string) {
   ws().updateTab(id, { title: title.trim() || undefined });
 }

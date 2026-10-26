@@ -1,4 +1,5 @@
 pub mod env;
+pub mod log;
 
 use std::collections::HashMap;
 use std::io::{Read, Write};
@@ -29,6 +30,11 @@ pub struct SpawnOptions {
     pub command: Option<String>,
     /// Shell integration (OSC 7/133); on unless disabled.
     pub integration: Option<bool>,
+    /// Keep all output on disk.
+    pub keep_log: Option<bool>,
+    /// Where, set by the backend.
+    #[serde(skip)]
+    pub log: Option<PathBuf>,
     /// Set by the backend: how to start the interactive shell when `args` is unset.
     #[serde(skip)]
     pub interactive_args: Option<Vec<String>>,
@@ -90,6 +96,7 @@ struct Pane {
     killer: Mutex<Box<dyn ChildKiller + Send + Sync>>,
     pid: Option<u32>,
     flow: Arc<Flow>,
+    log: Option<PathBuf>,
 }
 
 #[derive(Default)]
@@ -150,11 +157,13 @@ impl PtyManager {
             killer: Mutex::new(child.clone_killer()),
             pid,
             flow: flow.clone(),
+            log: opts.log.clone(),
         });
         self.panes.lock().unwrap().insert(id.clone(), pane);
 
         let (tx, rx) = mpsc::channel::<Vec<u8>>();
         let read_flow = flow.clone();
+        let mut log = opts.log.clone().and_then(|p| log::Log::open(p).ok());
         thread::Builder::new()
             .name(format!("pty-read-{id}"))
             .spawn(move || {
@@ -165,6 +174,9 @@ impl PtyManager {
                         Ok(0) | Err(_) => break,
                         Ok(n) => {
                             read_flow.add(n);
+                            if let Some(l) = log.as_mut() {
+                                l.write(&buf[..n], n < buf.len());
+                            }
                             if tx.send(buf[..n].to_vec()).is_err() {
                                 break;
                             }
@@ -258,6 +270,10 @@ impl PtyManager {
         if let Some(pane) = pane {
             let _ = pane.killer.lock().unwrap().kill();
             pane.flow.ack(usize::MAX);
+            if let Some(p) = &pane.log {
+                let _ = std::fs::remove_file(p);
+                let _ = std::fs::remove_file(log::rotated(p));
+            }
         }
     }
 
@@ -316,6 +332,20 @@ impl PtyManager {
         for id in ids {
             self.kill(&id);
         }
+    }
+
+    /// The on-disk output of a pane, oldest part first.
+    pub fn log_files(&self, id: &str) -> Vec<PathBuf> {
+        let Ok(pane) = self.get(id) else {
+            return vec![];
+        };
+        let Some(p) = &pane.log else {
+            return vec![];
+        };
+        [log::rotated(p), p.clone()]
+            .into_iter()
+            .filter(|f| f.exists())
+            .collect()
     }
 
     pub fn owner_of(&self, id: &str) -> Option<String> {

@@ -63,6 +63,8 @@ export const defaults = {
   },
   terminal: {
     scrollback: 10000,
+    /** Also keep all output in a file on disk (deleted with the pane), for "Open Full Scrollback". */
+    scrollback_disk: false,
     option_as_meta: "left" as "none" | "left" | "right" | "both",
     copy_on_select: false,
     paste_warning: true,

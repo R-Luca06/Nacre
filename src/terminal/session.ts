@@ -38,6 +38,7 @@ export interface TerminalSettings {
   /** The background shows through (window opacity, blur, image). */
   transparent: boolean;
   images: boolean;
+  scrollbackDisk: boolean;
   maskSecrets: boolean;
   screenReader: boolean;
   minimumContrast: number;
@@ -305,7 +306,12 @@ export class TerminalSession {
       }
       this.pid = await pty.spawn(
         this.id,
-        { cols: this.term.cols, rows: this.term.rows, ...this.launch },
+        {
+          cols: this.term.cols,
+          rows: this.term.rows,
+          keepLog: this.settings.scrollbackDisk,
+          ...this.launch,
+        },
         (data) => this.receive(data),
         onExit,
       );

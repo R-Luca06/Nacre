@@ -54,6 +54,10 @@ export const fr: Record<string, string> = {
   "Move Pane to Next Tab": "Déplacer le panneau dans l'onglet suivant",
   Sidebar: "Barre latérale",
   Complete: "Compléter",
+  "Scrollback on disk": "Historique sur disque",
+  "Open Full Scrollback": "Ouvrir tout l'historique",
+  "Turn on Scrollback on disk in Settings first.":
+    "Active d'abord « Historique sur disque » dans les réglages.",
   "Edit Command": "Éditer la commande",
   Suggestions: "Suggestions",
   "Show All Tabs": "Afficher tous les onglets",

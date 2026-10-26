@@ -270,6 +270,7 @@ function Terminal() {
         )}
       />
       <Toggle path={["terminal", "prompt_marks"]} label={t("Command marks")} />
+      <Toggle path={["terminal", "scrollback_disk"]} label={t("Scrollback on disk")} />
       <Toggle path={["terminal", "autosuggest"]} label={t("Suggestions")} />
       <Toggle path={["terminal", "images"]} label={t("Inline images")} />
       <Toggle path={["terminal", "mask_secrets"]} label={t("Hide secrets")} />

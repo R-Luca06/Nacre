@@ -37,7 +37,18 @@ pub fn pty_spawn(
             opts.interactive_args = inj.args;
         }
     }
+    if opts.keep_log == Some(true) {
+        opts.log = Some(paths.logs.join(format!("{id}.log")));
+    }
     pty.spawn(id, webview.label().to_owned(), opts, env, on_data, on_exit)
+}
+
+#[tauri::command]
+pub fn pty_log_files(pty: State<'_, PtyManager>, id: String) -> Vec<String> {
+    pty.log_files(&id)
+        .into_iter()
+        .map(|p| p.to_string_lossy().into_owned())
+        .collect()
 }
 
 #[tauri::command]

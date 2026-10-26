@@ -131,6 +131,7 @@ add("window.onTop", "Always on Top", "Window", [], () => ops.toggleAlwaysOnTop()
 add("window.quake", "Drop-down Terminal", "Window", [], () => invoke("quake_toggle"));
 add("app.update", "Check for Updates", "App", [], () => checkForUpdates(true));
 add("pane.record", "Record Pane", "Pane", [], () => toggleRecording());
+add("pane.fullScrollback", "Open Full Scrollback", "Pane", [], () => ops.openFullScrollback());
 add("pane.play", "Play Recording…", "Pane", [], () => playRecording());
 add("app.secureInput", "Secure Keyboard Entry", "App", [], () =>
   setValue(["general", "secure_input"], !useConfig.getState().config.general.secure_input),
