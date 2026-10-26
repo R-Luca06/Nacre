@@ -7,6 +7,8 @@ import { TabBar } from "./TabBar";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { Notice } from "./Notice";
 import { Toast } from "./Toast";
+import { PromptDialog } from "./PromptDialog";
+import { Settings } from "../settings/Settings";
 import { Dashboard } from "../claude/Dashboard";
 import { ClaudePanel, DiffView } from "../claude/Panel";
 import { FilterView } from "../terminal/FilterView";
@@ -46,6 +48,8 @@ export function App() {
           ))}
           {overlay?.kind === "palette" && <Palette />}
           {overlay?.kind === "confirm" && <ConfirmDialog confirm={overlay.confirm} />}
+          {overlay?.kind === "prompt" && <PromptDialog prompt={overlay.prompt} />}
+          {overlay?.kind === "settings" && <Settings />}
           {overlay?.kind === "claude" && (
             <Dashboard key={overlay.view ?? "sessions"} initial={overlay.view} />
           )}

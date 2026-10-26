@@ -3,6 +3,7 @@ import type { Bindings } from "../keybindings/keymap";
 import { useWorkspace } from "../store/workspace";
 import * as ops from "./ops";
 import { connectClaude, disconnectClaude } from "../claude/install";
+import { saveWorkspace } from "./workspaces";
 import {
   copyOutput,
   jumpPrompt,
@@ -83,6 +84,17 @@ add("layout.mainStack", "Layout: Main + Stack", "Pane", [], () => ops.applyPrese
 
 // Window
 add("window.new", "New Window", "Window", ["cmd+n"], () => ops.newWindow());
+add("workspace.save", "Save Window as Workspace", "Window", [], () =>
+  ws().setOverlay({
+    kind: "prompt",
+    prompt: {
+      title: t("Save Window as Workspace"),
+      placeholder: t("Name"),
+      action: t("Save"),
+      onSubmit: (name) => void saveWorkspace(name),
+    },
+  }),
+);
 add("window.close", "Close Window", "Window", ["shift+cmd+w"], () => ops.closeWindow());
 add("window.fullscreen", "Toggle Full Screen", "Window", ["ctrl+cmd+f"], () =>
   ops.toggleFullscreen(),

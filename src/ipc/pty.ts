@@ -21,6 +21,7 @@ export interface ProcInfo {
   name: string;
   cwd: string | null;
   isShell: boolean;
+  args: string[];
 }
 
 export function spawn(

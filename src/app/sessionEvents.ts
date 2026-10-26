@@ -12,7 +12,10 @@ import type { SessionEvents } from "../terminal/session";
 import { ring } from "./bell";
 import { invoke } from "@tauri-apps/api/core";
 import { fmtMs } from "../terminal/blocks";
-import { closePane, focusPane } from "./ops";
+import { closePane, focusPane, lookOf } from "./ops";
+import { setPaneLook } from "../terminal/registry";
+import { autoProfile, sshHost } from "../config/profiles";
+import { homeDir } from "./paths";
 
 const ws = () => useWorkspace.getState();
 
@@ -90,6 +93,20 @@ export function sessionEvents(id: string): SessionEvents {
   };
 }
 
+/** Profiles with `match_dirs` / `match_ssh` restyle panes that have no explicit profile. */
+function trackLook(id: string, proc: ProcInfo) {
+  const meta = ws().panes[id];
+  if (!meta || meta.profile || tabOfPane(id)?.theme) return;
+  const profiles = useConfig.getState().config.profiles;
+  if (!Object.keys(profiles).length) {
+    setPaneLook(id, undefined);
+    return;
+  }
+  const host = proc.name === "ssh" ? sshHost(proc.args) : undefined;
+  const p = autoProfile(profiles, { cwd: meta.cwd, sshHost: host, home: homeDir() });
+  setPaneLook(id, lookOf(p));
+}
+
 let tick = 0;
 const lastDetect = new Map<string, number>();
 
@@ -138,6 +155,7 @@ export function startProcessPolling() {
           if (!meta.cwdFromOsc && proc.cwd && proc.isShell) patch.cwd = proc.cwd;
           if (Object.keys(patch).length) ws().updatePane(id, patch);
           trackClaude(id, proc);
+          trackLook(id, proc);
         } catch {
           /* pane closed meanwhile */
         }

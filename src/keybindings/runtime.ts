@@ -32,7 +32,7 @@ export const bindingsFor = (actionId: string): Combo[] => bindings[actionId] ?? 
 
 export function onBindingsChange(fn: () => void) {
   listeners.add(fn);
-  return () => listeners.delete(fn);
+  return () => void listeners.delete(fn);
 }
 
 let lastFired = { id: "", at: 0 };

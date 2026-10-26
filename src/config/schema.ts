@@ -1,3 +1,4 @@
+import { type Profile, normalizeProfiles } from "./profiles";
 /**
  * Config defaults and validation. Every invalid value falls back to its default
  * and yields a one-line error, so a typo never breaks the app.
@@ -7,6 +8,9 @@ export const defaults = {
   general: {
     language: "auto" as "auto" | "en" | "fr",
     confirm_close: true,
+    restore_session: true,
+    /** Lines of scrollback kept per pane across restarts; 0 disables. */
+    restore_scrollback: 1000,
   },
   shell: {
     program: "",
@@ -26,6 +30,8 @@ export const defaults = {
     mode: "dark" as "dark" | "light" | "system",
     dark: "Nacre",
     light: "Nacre Light",
+    /** Tabs and bars follow this theme; empty follows the terminal theme. */
+    ui: "",
   },
   cursor: {
     style: "block" as "block" | "bar" | "underline",
@@ -68,6 +74,7 @@ export const defaults = {
     sound: false,
     dock_badge: true,
   },
+  profiles: {} as Record<string, Profile>,
   keys: {} as Record<string, string | string[]>,
 };
 
@@ -89,6 +96,7 @@ type Rule = { enum?: readonly string[]; min?: number; max?: number; int?: boolea
 
 const rules: Record<string, Rule> = {
   "general.language": { enum: ["auto", "en", "fr"] },
+  "general.restore_scrollback": { min: 0, max: 100000, int: true },
   "font.size": { min: 6, max: 72 },
   "font.line_height": { min: 0.8, max: 3 },
   "font.letter_spacing": { min: -5, max: 20 },
@@ -158,6 +166,7 @@ export const enumOptions = (path: string) => rules[path]?.enum;
 const kind = (v: unknown) => (Array.isArray(v) ? "array" : v === null ? "null" : typeof v);
 
 function check(path: string, def: unknown, value: unknown, errors: string[]): unknown {
+  if (path === "profiles") return normalizeProfiles(value, errors);
   if (value === undefined) return def;
   const listCheck = TABLE_LISTS[path];
   if (listCheck) {

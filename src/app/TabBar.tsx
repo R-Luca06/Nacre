@@ -6,6 +6,7 @@ import { paneIds } from "../layout/tree";
 import { t } from "../i18n";
 import { ProcessIcon } from "./ProcessIcon";
 import { useClaude } from "../claude/store";
+import { allThemes, useConfig } from "../store/config";
 import { tabTitle } from "./titles";
 import * as ops from "./ops";
 import "./tabbar.css";
@@ -59,12 +60,32 @@ export function TabBar({ fullscreen }: { fullscreen: boolean }) {
             onPointerDown={(e) => startDrag(e, tab)}
           />
         ))}
-        <button className="tab-new icon-btn" title={t("New Tab")} onClick={() => ops.newTab()}>
+        <button
+          className="tab-new icon-btn"
+          title={t("New Tab")}
+          onClick={() => ops.newTab()}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            void showProfileMenu();
+          }}
+        >
           <Plus size={14} strokeWidth={1.5} />
         </button>
       </div>
     </div>
   );
+}
+
+async function showProfileMenu() {
+  const names = Object.keys(useConfig.getState().config.profiles);
+  const menu = await Menu.new({
+    items: [
+      { text: t("Default"), action: () => void ops.newTab() },
+      ...(names.length ? [{ item: "Separator" as const }] : []),
+      ...names.map((n) => ({ text: n, action: () => void ops.newTab({ profile: n }) })),
+    ],
+  });
+  await menu.popup();
 }
 
 function TabItem(props: {
@@ -105,6 +126,18 @@ function TabItem(props: {
             })),
             { item: "Separator" as const },
             { text: t("None"), action: () => ops.setTabColor(tab.id, undefined) },
+          ],
+        },
+        {
+          text: t("Theme"),
+          items: [
+            { text: t("Default"), action: () => ops.setTabTheme(tab.id, undefined) },
+            { item: "Separator" as const },
+            ...allThemes().map((th) => ({
+              text: th.name,
+              checked: tab.theme === th.name,
+              action: () => ops.setTabTheme(tab.id, th.name),
+            })),
           ],
         },
         { item: "Separator" },

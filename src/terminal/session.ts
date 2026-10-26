@@ -5,6 +5,7 @@ import { Unicode11Addon } from "@xterm/addon-unicode11";
 import { WebLinksAddon } from "@xterm/addon-web-links";
 import { WebglAddon } from "@xterm/addon-webgl";
 import { LigaturesAddon } from "@xterm/addon-ligatures";
+import { SerializeAddon } from "@xterm/addon-serialize";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import "@xterm/xterm/css/xterm.css";
 import * as pty from "../ipc/pty";
@@ -60,6 +61,7 @@ export class TerminalSession {
   readonly events: SessionEvents;
   private fitAddon = new FitAddon();
   private searchAddon = new SearchAddon({ highlightLimit: 2000 });
+  private serializeAddon = new SerializeAddon();
   private webgl: WebglAddon | null = null;
   private ligatures: LigaturesAddon | null = null;
   private opened = false;
@@ -100,6 +102,7 @@ export class TerminalSession {
     });
     this.term.loadAddon(this.fitAddon);
     this.term.loadAddon(this.searchAddon);
+    this.term.loadAddon(this.serializeAddon);
     const unicode = new Unicode11Addon();
     this.term.loadAddon(unicode);
     this.term.unicode.activeVersion = "11";
@@ -338,6 +341,21 @@ export class TerminalSession {
   onSearchResults(fn: (index: number, count: number) => void) {
     this.searchListeners.add(fn);
     return () => void this.searchListeners.delete(fn);
+  }
+
+  /** Scrollback with colors, as ANSI text (alt screen excluded). */
+  serialize(lines: number): string {
+    return this.serializeAddon.serialize({
+      scrollback: lines,
+      excludeAltBuffer: true,
+      excludeModes: true,
+    });
+  }
+
+  /** Shows text from a previous run above the new prompt. */
+  restoreText(text: string) {
+    if (!text) return;
+    this.term.write(text.replace(/\n/g, "\r\n").replace(/\r\r\n/g, "\r\n") + "\x1b[0m\r\n");
   }
 
   clearSearch() {

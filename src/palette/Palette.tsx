@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { actions, actionLabel } from "../app/actions";
-import { focusPane } from "../app/ops";
+import { focusPane, newTab } from "../app/ops";
+import { useConfig } from "../store/config";
+import { openWorkspace, useWorkspaces } from "../app/workspaces";
 import { formatCombo } from "../keybindings/combo";
 import { bindingsFor, runAction } from "../keybindings/runtime";
 import { activeTab, useWorkspace } from "../store/workspace";
@@ -20,6 +22,22 @@ const sources: (() => PaletteItem[])[] = [];
 export function addPaletteSource(fn: () => PaletteItem[]) {
   sources.push(fn);
 }
+
+addPaletteSource(() =>
+  Object.keys(useConfig.getState().config.profiles).map((name) => ({
+    id: `profile:${name}`,
+    label: `${t("New Tab")}: ${name}`,
+    run: () => void newTab({ profile: name }),
+  })),
+);
+
+addPaletteSource(() =>
+  useWorkspaces.getState().list.map((w) => ({
+    id: `workspace:${w.file}`,
+    label: `${t("Workspace")}: ${w.name}`,
+    run: () => openWorkspace(w),
+  })),
+);
 
 function actionItems(): PaletteItem[] {
   return actions

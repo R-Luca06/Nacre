@@ -14,6 +14,8 @@ export interface PaneMeta {
   /** The shell reports its cwd via OSC 7; polling must not override it. */
   cwdFromOsc?: boolean;
   exited?: ExitInfo;
+  /** Profile the pane was opened with. */
+  profile?: string;
   /** From shell integration (OSC 133). */
   lastCommand?: { command?: string; duration?: number; exitCode?: number; at: number };
   bell?: boolean;
@@ -29,12 +31,23 @@ export interface Tab {
   color?: string;
   pinned?: boolean;
   broadcast?: boolean;
+  /** Terminal theme for every pane of this tab. */
+  theme?: string;
 }
 
 export interface ClosedTab {
   tab: Tab;
   cwds: Record<string, string | undefined>;
+  profiles?: Record<string, string | undefined>;
   index: number;
+}
+
+export interface PromptRequest {
+  title: string;
+  placeholder?: string;
+  value?: string;
+  action: string;
+  onSubmit: (value: string) => void;
 }
 
 export interface Confirm {
@@ -51,6 +64,8 @@ export type Overlay =
   | { kind: "claude"; view?: "sessions" | "history" | "usage" }
   | { kind: "diff"; path: string; cwd: string | null }
   | { kind: "filter"; paneId: string; blockId: number }
+  | { kind: "prompt"; prompt: PromptRequest }
+  | { kind: "settings" }
   | null;
 
 interface WorkspaceState {

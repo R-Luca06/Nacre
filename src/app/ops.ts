@@ -29,6 +29,8 @@ import {
   updateAllSessions,
 } from "../terminal/registry";
 import type { LaunchOptions } from "../terminal/session";
+import { type PaneLook, setPaneLook } from "../terminal/registry";
+import type { Profile } from "../config/profiles";
 import { homeDir, isDangerousPaste } from "./paths";
 import { ackPane, sessionForPane } from "../claude/store";
 
@@ -56,12 +58,48 @@ export function defaultLaunch(cwd?: string): LaunchOptions {
   };
 }
 
-function makePane(launch: LaunchOptions): string {
+export function lookOf(p: Profile | undefined): PaneLook | undefined {
+  if (!p || (!p.theme && !p.font_family && !p.font_size)) return undefined;
+  return {
+    theme: p.theme || undefined,
+    fontFamily: p.font_family || undefined,
+    fontSize: p.font_size || undefined,
+  };
+}
+
+/** Launch options and look for a profile; its directory wins over the inherited one. */
+export function launchFor(profile: string | undefined, cwd?: string, command?: string) {
+  const base = defaultLaunch(cwd);
+  const p = profile ? useConfig.getState().config.profiles[profile] : undefined;
+  const launch: LaunchOptions = p
+    ? {
+        ...base,
+        cwd: p.cwd ? expandHome(p.cwd) : base.cwd,
+        shell: p.shell || base.shell,
+        args: p.args.length ? p.args : base.args,
+        env: { ...base.env, ...p.env },
+        command: command ?? (p.command || undefined),
+      }
+    : { ...base, command };
+  return { launch, look: lookOf(p), profile: p?.name };
+}
+
+function makePane(launch: LaunchOptions, profile?: string, look?: PaneLook): string {
   const id = uid("p");
-  const meta: PaneMeta = { id, launch, cwd: launch.cwd };
+  const meta: PaneMeta = { id, launch, cwd: launch.cwd, profile };
   ws().addPane(meta);
-  createSession(id, launch);
+  createSession(id, launch, look);
   return id;
+}
+
+export function makePaneFor(
+  cwd: string | undefined,
+  profile: string | undefined,
+  command?: string,
+): string {
+  const l = launchFor(profile, cwd, command);
+  // A restored pane keeps its directory even when the profile has its own.
+  return makePane({ ...l.launch, cwd: cwd ?? l.launch.cwd }, l.profile, l.look);
 }
 
 /** Best known working directory: OSC 7, then the foreground process. */
@@ -80,10 +118,17 @@ export async function paneCwd(id: string | undefined): Promise<string | undefine
 const activePaneId = () => activeTab()?.active;
 
 export async function newTab(
-  opts: { cwd?: string; command?: string; launch?: LaunchOptions; after?: string } = {},
+  opts: {
+    cwd?: string;
+    command?: string;
+    profile?: string;
+    launch?: LaunchOptions;
+    after?: string;
+  } = {},
 ) {
   const cwd = opts.cwd ?? (await paneCwd(activePaneId()));
-  const id = makePane(opts.launch ?? { ...defaultLaunch(cwd), command: opts.command });
+  const l = launchFor(opts.profile, cwd, opts.command);
+  const id = makePane(opts.launch ?? l.launch, l.profile, l.look);
   const tab: Tab = { id: uid("t"), root: pane(id), active: id, zoomed: null };
   const { tabs } = ws();
   const at = opts.after ? tabs.findIndex((x) => x.id === opts.after) + 1 : tabs.length;
@@ -95,17 +140,24 @@ export async function newTab(
 
 export async function splitPane(
   side: Side,
-  opts: { cwd?: string; command?: string; launch?: LaunchOptions } = {},
+  opts: { cwd?: string; command?: string; profile?: string; launch?: LaunchOptions } = {},
 ) {
   const tab = activeTab();
   if (!tab) return;
   const cwd = opts.cwd ?? (await paneCwd(tab.active));
-  const id = makePane(opts.launch ?? { ...defaultLaunch(cwd), command: opts.command });
+  const profile = opts.profile ?? ws().panes[tab.active]?.profile;
+  const l = launchFor(profile, cwd, opts.command);
+  const id = makePane(
+    opts.launch ?? { ...l.launch, cwd: opts.cwd ?? cwd ?? l.launch.cwd },
+    l.profile,
+    l.look,
+  );
   ws().updateTab(tab.id, {
     root: split(tab.root, tab.active, side, id, uid("s")),
     active: id,
     zoomed: null,
   });
+  if (tab.theme) setTabTheme(tab.id, tab.theme);
   focusPane(id);
   return id;
 }
@@ -245,6 +297,7 @@ export async function closeTab(id = ws().activeTabId, force = false) {
       tab,
       index,
       cwds: Object.fromEntries(ids.map((p) => [p, panes[p]?.cwd])),
+      profiles: Object.fromEntries(ids.map((p) => [p, panes[p]?.profile])),
     });
     const rest = tabs.filter((x) => x.id !== id);
     for (const p of ids) disposeSession(p);
@@ -270,7 +323,7 @@ export function reopenTab() {
   const map = new Map<string, string>();
   const remap = (node: LayoutNode): LayoutNode => {
     if (node.kind === "pane") {
-      const id = makePane(defaultLaunch(closed.cwds[node.id]));
+      const id = makePaneFor(closed.cwds[node.id], closed.profiles?.[node.id]);
       map.set(node.id, id);
       return pane(id);
     }
@@ -366,6 +419,17 @@ export function paneToNewTab() {
 
 export function renameTab(id: string, title: string) {
   ws().updateTab(id, { title: title.trim() || undefined });
+}
+
+export function setTabTheme(id: string, theme: string | undefined) {
+  const tab = ws().tabs.find((x) => x.id === id);
+  if (!tab) return;
+  ws().updateTab(id, { theme });
+  for (const p of paneIds(tab.root)) {
+    const profile = ws().panes[p]?.profile;
+    const base = lookOf(profile ? useConfig.getState().config.profiles[profile] : undefined);
+    setPaneLook(p, theme ? { ...base, theme } : base);
+  }
 }
 
 export function setTabColor(id: string, color: string | undefined) {
@@ -510,5 +574,5 @@ export function openConfigFile() {
 }
 
 export function openSettings() {
-  openConfigFile();
+  ws().setOverlay(ws().overlay?.kind === "settings" ? null : { kind: "settings" });
 }

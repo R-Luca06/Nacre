@@ -95,6 +95,25 @@ pub async fn pty_busy(
 
 #[tauri::command]
 pub fn app_quit(app: tauri::AppHandle) {
+    app.state::<crate::persistence::SessionStore>()
+        .set_quitting();
     app.state::<PtyManager>().kill_all();
     app.exit(0);
+}
+
+#[tauri::command]
+pub fn session_save(
+    webview: Webview,
+    store: State<'_, crate::persistence::SessionStore>,
+    state: serde_json::Value,
+) {
+    store.save(webview.label(), state);
+}
+
+#[tauri::command]
+pub fn session_take(
+    store: State<'_, crate::persistence::SessionStore>,
+    key: String,
+) -> Option<serde_json::Value> {
+    store.take(&key)
 }

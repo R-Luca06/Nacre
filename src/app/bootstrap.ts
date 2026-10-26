@@ -19,7 +19,9 @@ import { useWorkspace } from "../store/workspace";
 import { applyChrome, chromeTokens } from "../themes/apply";
 import { setSessionEvents, updateAllSessions } from "../terminal/registry";
 import { handleKeyEvent } from "../keybindings/runtime";
-import { closeWindow, newTab } from "./ops";
+import { closeWindow, makePaneFor, newTab, uid } from "./ops";
+import { restoreWindow, startAutosave, takeSaved } from "./persistence";
+import { initWorkspaces } from "./workspaces";
 import { initPaths } from "./paths";
 import { initMenu, refreshMenu } from "./menu";
 import { initClaude } from "../claude/integration";
@@ -38,7 +40,7 @@ export function applyConfig() {
   if (!findTheme(activeThemeName(s), s)) {
     errors.push(`theme: "${activeThemeName(s)}" not found, using ${theme.name}`);
   }
-  applyChrome(chromeTokens(theme));
+  applyChrome(chromeTokens((s.config.theme.ui && findTheme(s.config.theme.ui, s)) || theme));
   errors.push(...rebuildKeymap(s.config.keys));
   updateAllSessions();
   useConfig.getState().setExtraErrors(errors);
@@ -113,6 +115,7 @@ export async function bootstrap() {
   );
 
   initMenu();
+  await initWorkspaces();
   await initClaude();
   initRemote();
   const win = getCurrentWindow();
@@ -122,8 +125,12 @@ export async function bootstrap() {
   });
 
   const params = new URLSearchParams(location.search);
-  await newTab({ cwd: params.get("cwd") ?? undefined });
+  const restoreKey = params.get("restore");
+  const saved = restoreKey ? await takeSaved(restoreKey).catch(() => null) : null;
+  const restored = saved ? await restoreWindow(saved, makePaneFor, uid) : false;
+  if (!restored) await newTab({ cwd: params.get("cwd") ?? undefined });
   startProcessPolling();
+  startAutosave();
 
   useWorkspace.subscribe((s, prev) => {
     if (s.activeTabId !== prev.activeTabId || s.panes !== prev.panes) {
@@ -136,7 +143,10 @@ export async function bootstrap() {
   if (import.meta.env.DEV) {
     const ops = await import("./ops");
     const registry = await import("../terminal/registry");
-    Object.assign(window, { __nacre: { ws: useWorkspace, config: useConfig, ops, registry } });
+    const workspaces = await import("./workspaces");
+    Object.assign(window, {
+      __nacre: { ws: useWorkspace, config: useConfig, ops, registry, workspaces },
+    });
   }
 
   setTimeout(() => void invoke("window_ready"), 30);

@@ -23,7 +23,7 @@ export function renderTemplate(
     "",
   ];
   for (const [section, values] of Object.entries(c)) {
-    if (section === "keys") continue;
+    if (section === "keys" || section === "profiles") continue;
     out.push(`[${section}]`);
     for (const [key, value] of Object.entries(values as object)) {
       if (section === "statusbar" && key === "custom") continue;
@@ -38,6 +38,13 @@ export function renderTemplate(
   out.push('#   name = "load"');
   out.push('#   command = "sysctl -n vm.loadavg"');
   out.push("#   interval = 10");
+  out.push("");
+  out.push("# Profiles: new tabs with their own shell, directory, theme or font.");
+  out.push("# [profiles.work]");
+  out.push('#   cwd = "~/work"');
+  out.push('#   theme = "Tokyo Night"');
+  out.push('#   match_dirs = ["~/work"]   # applies the look automatically there');
+  out.push('#   match_ssh = ["*.prod.*"]  # e.g. a red theme on production hosts');
   out.push("");
   out.push("[keys]");
   out.push('# One shortcut or a list. "" unbinds. Chords: "ctrl+a d".');

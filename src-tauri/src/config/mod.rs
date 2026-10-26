@@ -91,8 +91,21 @@ pub fn load() -> Loaded {
     }
 }
 
+pub fn workspaces_dir() -> PathBuf {
+    config_dir().join("workspaces")
+}
+
 pub fn load_themes() -> Vec<ThemeFile> {
-    let Ok(entries) = std::fs::read_dir(themes_dir()) else {
+    load_dir(&themes_dir(), "themes")
+}
+
+pub fn load_workspaces() -> Vec<ThemeFile> {
+    load_dir(&workspaces_dir(), "workspaces")
+}
+
+/// Every `*.toml` in `dir`, parsed; errors name the file.
+fn load_dir(dir: &Path, label: &str) -> Vec<ThemeFile> {
+    let Ok(entries) = std::fs::read_dir(dir) else {
         return vec![];
     };
     let mut out: Vec<ThemeFile> = entries
@@ -113,7 +126,7 @@ pub fn load_themes() -> Vec<ThemeFile> {
                         error: None,
                     },
                     Err(e) => ThemeFile {
-                        error: Some(e.replacen("config.toml", &format!("themes/{file}"), 1)),
+                        error: Some(e.replacen("config.toml", &format!("{label}/{file}"), 1)),
                         file,
                         raw: None,
                     },
@@ -157,6 +170,7 @@ pub fn watch(app: AppHandle) {
             }
             let config = config_path();
             let themes = themes_dir();
+            let workspaces = workspaces_dir();
             while let Ok(first) = rx.recv() {
                 let mut events = vec![first];
                 while let Ok(e) = rx.recv_timeout(Duration::from_millis(120)) {
@@ -172,6 +186,12 @@ pub fn watch(app: AppHandle) {
                     .any(|p| p.starts_with(&themes) || same_file(p, &themes))
                 {
                     let _ = app.emit("themes-changed", load_themes());
+                }
+                if paths
+                    .iter()
+                    .any(|p| p.starts_with(&workspaces) || same_file(p, &workspaces))
+                {
+                    let _ = app.emit("workspaces-changed", load_workspaces());
                 }
             }
         })

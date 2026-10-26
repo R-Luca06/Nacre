@@ -2,6 +2,7 @@ mod claude;
 mod commands;
 mod config;
 mod ipc_socket;
+mod persistence;
 mod process;
 mod pty;
 mod shell_integration;
@@ -47,7 +48,7 @@ pub fn run() {
                 .path()
                 .app_data_dir()
                 .unwrap_or_else(|_| std::env::temp_dir().join("nacre"));
-            let shell = shell_integration::default_dir(data);
+            let shell = shell_integration::default_dir(data.clone());
             if let Err(e) = shell_integration::install(&shell) {
                 eprintln!("nacre: shell integration unavailable: {e}");
             }
@@ -61,7 +62,20 @@ pub fn run() {
             }
             config::watch(app.handle().clone());
             app.state::<claude::ClaudeHub>().start(app.handle().clone());
-            commands::window::open_window(app.handle(), &[])?;
+            let store = persistence::SessionStore::load(data.join("session.json"));
+            let restore = config::load()
+                .raw
+                .as_ref()
+                .and_then(|r| r["general"]["restore_session"].as_bool())
+                .unwrap_or(true);
+            let previous = if restore { store.previous() } else { vec![] };
+            app.manage(store);
+            if previous.is_empty() {
+                commands::window::open_window(app.handle(), &[])?;
+            }
+            for key in previous {
+                commands::window::open_window(app.handle(), &[("restore", &key)])?;
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -77,6 +91,10 @@ pub fn run() {
             commands::config::config_set,
             commands::config::themes_load,
             commands::config::theme_save,
+            commands::config::workspaces_load,
+            commands::config::config_read,
+            commands::config::config_replace,
+            commands::config::workspace_save,
             commands::menu::menu_set,
             commands::claude::claude_sessions,
             commands::claude::claude_ack,
@@ -98,6 +116,8 @@ pub fn run() {
             commands::app_quit,
             commands::pty_busy,
             commands::window::window_new,
+            commands::session_save,
+            commands::session_take,
             commands::window::pane_focus,
             commands::system::git_diff,
             commands::system::save_download,
@@ -108,12 +128,18 @@ pub fn run() {
         .on_window_event(|window, event| {
             if let WindowEvent::Destroyed = event {
                 window.state::<PtyManager>().kill_owned_by(window.label());
+                window
+                    .state::<persistence::SessionStore>()
+                    .window_closed(window.label());
             }
         })
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
 
     app.run(|handle, event| match event {
+        RunEvent::ExitRequested { .. } => {
+            handle.state::<persistence::SessionStore>().set_quitting()
+        }
         RunEvent::Exit => handle.state::<PtyManager>().kill_all(),
         #[cfg(target_os = "macos")]
         RunEvent::Reopen {

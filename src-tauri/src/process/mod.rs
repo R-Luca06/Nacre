@@ -13,6 +13,8 @@ pub struct ProcInfo {
     pub cwd: Option<String>,
     /// True when the shell itself is in the foreground (nothing running).
     pub is_shell: bool,
+    /// Command line, capped (used to spot `ssh` hosts).
+    pub args: Vec<String>,
 }
 
 pub struct ProcessInspector {
@@ -52,6 +54,7 @@ impl ProcessInspector {
             name: display_name(&p.name().to_string_lossy(), exe.as_deref(), &cmd),
             cwd: p.cwd().map(|c| c.to_string_lossy().into_owned()),
             is_shell: Some(pid) == shell_pid,
+            args: cmd.into_iter().take(24).collect(),
         })
     }
 }
