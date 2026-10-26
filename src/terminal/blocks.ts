@@ -5,6 +5,8 @@ export interface Block {
   id: number;
   prompt: IMarker;
   input?: IMarker;
+  /** Column where typing starts on the `input` line. */
+  inputX?: number;
   output?: IMarker;
   end?: IMarker;
   command?: string;
@@ -41,6 +43,30 @@ export class CommandTracker {
     return this.blocks.length > 0;
   }
 
+  /** What is typed at the prompt, when the cursor sits at its end; null outside a prompt. */
+  currentInput(): { text: string; y: number; x: number } | null {
+    const b = this.blocks.at(-1);
+    if (!b?.input || b.output || b.input.isDisposed || b.inputX === undefined) return null;
+    const buf = this.term.buffer.active;
+    if (buf.type !== "normal") return null;
+    const y = buf.baseY + buf.cursorY;
+    const x = buf.cursorX;
+    if (y < b.input.line || y - b.input.line > 20) return null;
+    let text = "";
+    for (let row = b.input.line; row <= y; row++) {
+      const line = buf.getLine(row);
+      if (!line) return null;
+      text += line.translateToString(
+        false,
+        row === b.input.line ? b.inputX : 0,
+        row === y ? x : undefined,
+      );
+    }
+    // Something after the cursor (mid-line edit, or the shell's own suggestion): stay quiet.
+    if (buf.getLine(y)?.translateToString(true, x).trim()) return null;
+    return { text, y, x };
+  }
+
   onChange(fn: () => void) {
     this.listeners.add(fn);
     return () => void this.listeners.delete(fn);
@@ -66,7 +92,10 @@ export class CommandTracker {
         break;
       }
       case "B":
-        if (last) last.input = this.term.registerMarker(0) ?? undefined;
+        if (last) {
+          last.input = this.term.registerMarker(0) ?? undefined;
+          last.inputX = this.term.buffer.active.cursorX;
+        }
         break;
       case "E":
         if (last) last.command = unescapeCommand(arg);

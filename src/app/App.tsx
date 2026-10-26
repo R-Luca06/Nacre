@@ -9,6 +9,7 @@ import { ConfirmDialog } from "./ConfirmDialog";
 import { Notice } from "./Notice";
 import { Toast } from "./Toast";
 import { Overview } from "./Overview";
+import { CommandEditor } from "../terminal/CommandEditor";
 import { PromptDialog } from "./PromptDialog";
 import { Settings } from "../settings/Settings";
 import { Dashboard } from "../claude/Dashboard";
@@ -61,6 +62,9 @@ export function App() {
           {overlay?.kind === "prompt" && <PromptDialog prompt={overlay.prompt} />}
           {overlay?.kind === "settings" && <Settings />}
           {overlay?.kind === "overview" && <Overview />}
+          {overlay?.kind === "editor" && (
+            <CommandEditor paneId={overlay.paneId} text={overlay.text} />
+          )}
           {overlay?.kind === "claude" && (
             <Dashboard key={overlay.view ?? "sessions"} initial={overlay.view} />
           )}

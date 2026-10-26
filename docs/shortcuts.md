@@ -20,6 +20,10 @@ All of them can be changed in Settings → Shortcuts or under `[keys]`.
 | ⇧⌘H · ⇧⌘J · ⇧⌘S · ⇧⌘R | History · directories · snippets · SSH hosts              |
 | ⌘K · ⇧⌘E · ⌥⌘F · ⇧⌘A  | Command from text · explain error · suggest fix · AI chat |
 | ⇧⌘C · ⌥⌘C · ⌃⌘C       | Claude sessions · Claude in split · Claude panel          |
+| ⌃Space · →            | Completions · accept the gray suggestion                  |
+| ⌥⌘E                   | Edit the command on several lines (⌘↩ runs, ⇧⌘↩ inserts)  |
+| ⇧⌘\\                  | All tabs                                                  |
+| ⇧⌘V                   | Clipboard history                                         |
 | ⌘= / ⌘- / ⌘0          | Text size                                                 |
 | ⌘,                    | Settings                                                  |
 

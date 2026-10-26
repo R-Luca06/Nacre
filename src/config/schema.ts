@@ -68,6 +68,8 @@ export const defaults = {
     paste_warning: true,
     bell: "visual" as "none" | "visual" | "sound" | "notify",
     prompt_marks: true,
+    /** Gray suggestion from history while typing; → accepts it. */
+    autosuggest: true,
     /** Sixel and iTerm2 inline images. */
     images: true,
     /** Hide API keys, tokens and private keys in output (copying still gets the text). */

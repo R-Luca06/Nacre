@@ -1,0 +1,55 @@
+.ghost {
+  position: absolute;
+  z-index: 3;
+  color: var(--text-dim);
+  opacity: 0.55;
+  white-space: pre;
+  pointer-events: none;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.complete-menu {
+  position: absolute;
+  z-index: 6;
+  min-width: 160px;
+  max-width: 60%;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+}
+
+.complete-menu li {
+  padding: 0 8px;
+  border-radius: var(--radius);
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-dim);
+  cursor: default;
+}
+
+.complete-menu li.selected {
+  background: var(--bg-raised);
+  color: var(--text);
+}
+
+.confirm.editor {
+  width: min(640px, calc(100% - 32px));
+}
+
+.editor-text {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  outline: none;
+  resize: vertical;
+  background: var(--bg);
+  color: var(--text);
+  font: 12px/1.5 var(--mono-font);
+}
+
+.editor-text:focus {
+  border-color: var(--accent);
+}

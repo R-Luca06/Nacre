@@ -26,6 +26,32 @@ pub fn history_add(
 }
 
 #[tauri::command]
+pub async fn history_prefix(
+    history: State<'_, History>,
+    prefix: String,
+    cwd: Option<String>,
+    limit: Option<usize>,
+) -> Result<Vec<String>, String> {
+    Ok(history.prefix(&prefix, cwd.as_deref(), limit.unwrap_or(10)))
+}
+
+/// `scripts` of the nearest package.json, for `npm run` completion.
+#[tauri::command]
+pub async fn package_scripts(cwd: String) -> Vec<String> {
+    let mut dir = Some(std::path::PathBuf::from(cwd));
+    while let Some(d) = dir {
+        if let Ok(text) = std::fs::read_to_string(d.join("package.json")) {
+            return serde_json::from_str::<serde_json::Value>(&text)
+                .ok()
+                .and_then(|v| v.get("scripts")?.as_object().map(|m| m.keys().cloned().collect()))
+                .unwrap_or_default();
+        }
+        dir = d.parent().map(|p| p.to_path_buf());
+    }
+    vec![]
+}
+
+#[tauri::command]
 pub async fn history_search(
     history: State<'_, History>,
     query: String,

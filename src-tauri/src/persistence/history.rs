@@ -73,6 +73,32 @@ impl History {
     }
 
     /// Newest first, one row per distinct command; `query` filters by substring words.
+    /// Newest first, unique, starting with `prefix`; commands run in `cwd` come first.
+    pub fn prefix(&self, prefix: &str, cwd: Option<&str>, limit: usize) -> Vec<String> {
+        let entries = self.entries.lock().unwrap();
+        let mut seen = std::collections::HashSet::new();
+        let (mut here, mut elsewhere) = (Vec::new(), Vec::new());
+        for e in entries.iter().rev() {
+            if e.command.len() <= prefix.len()
+                || !e.command.starts_with(prefix)
+                || !seen.insert(e.command.as_str())
+            {
+                continue;
+            }
+            if cwd.is_some() && e.cwd.as_deref() == cwd {
+                here.push(e.command.clone());
+            } else {
+                elsewhere.push(e.command.clone());
+            }
+            if here.len() >= limit {
+                break;
+            }
+        }
+        here.extend(elsewhere);
+        here.truncate(limit);
+        here
+    }
+
     pub fn search(&self, query: &str, limit: usize) -> Vec<Entry> {
         let words: Vec<String> = query.split_whitespace().map(|w| w.to_lowercase()).collect();
         let entries = self.entries.lock().unwrap();
@@ -209,6 +235,8 @@ mod tests {
             vec!["git push", "git status", "ls"]
         );
         assert_eq!(h.search("GIT", 10).len(), 2);
+        assert_eq!(h.prefix("git ", None, 10), vec!["git push", "git status"]);
+        assert!(h.prefix("git push", None, 10).is_empty());
         let reloaded = History::load(p.clone());
         assert_eq!(reloaded.search("", 10).len(), 3);
         let _ = std::fs::remove_file(p);

@@ -388,6 +388,13 @@ export class TerminalSession {
     this.fit();
   }
 
+  /** Set by the suggestion layer; sees keys before the bindings. */
+  private keyHook: ((e: KeyboardEvent) => boolean) | null = null;
+
+  setKeyHook(fn: ((e: KeyboardEvent) => boolean) | null) {
+    this.keyHook = fn;
+  }
+
   private handleKey(e: KeyboardEvent): boolean {
     if (e.type === "keypress") {
       if (this.swallowKeypress) {
@@ -397,7 +404,7 @@ export class TerminalSession {
       return true;
     }
     if (e.type !== "keydown") return true;
-    if (this.events.onKey?.(e, this)) {
+    if (this.keyHook?.(e) || this.events.onKey?.(e, this)) {
       e.preventDefault();
       this.swallowKeypress = true;
       return false;

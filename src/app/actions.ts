@@ -1,6 +1,7 @@
 import { t } from "../i18n";
 import type { Bindings } from "../keybindings/keymap";
-import { useWorkspace } from "../store/workspace";
+import { activeTab, useWorkspace } from "../store/workspace";
+import { getSession } from "../terminal/registry";
 import * as ops from "./ops";
 import { connectClaude, disconnectClaude } from "../claude/install";
 import { saveWorkspace } from "./workspaces";
@@ -10,6 +11,7 @@ import { setValue } from "../settings/fields";
 import { checkForUpdates } from "./updates";
 import { playRecording, toggleRecording } from "./recordings";
 import { moveTab } from "./moveTab";
+import { requestCompletion } from "../terminal/Suggest";
 import { useConfig } from "../store/config";
 import {
   copyOutput,
@@ -86,6 +88,18 @@ add("pane.swap", "Swap with Next", "Pane", [], () => ops.swapNext());
 add("pane.broadcast", "Broadcast Input", "Pane", ["alt+cmd+i"], () => ops.toggleBroadcast());
 add("pane.toTab", "Move Pane to New Tab", "Pane", [], () => ops.paneToNewTab());
 add("pane.toNextTab", "Move Pane to Next Tab", "Pane", [], () => ops.paneToNextTab());
+add("input.complete", "Complete", "Edit", ["ctrl+ "], () => {
+  const id = activeTab()?.active;
+  const s = id ? getSession(id) : undefined;
+  if (!id || !s?.commands.currentInput()) return false;
+  requestCompletion(id);
+});
+add("input.edit", "Edit Command", "Edit", ["alt+cmd+e"], () => {
+  const id = activeTab()?.active;
+  const input = id ? getSession(id)?.commands.currentInput() : undefined;
+  if (!id || input === undefined) return false;
+  useWorkspace.getState().setOverlay({ kind: "editor", paneId: id, text: input?.text ?? "" });
+});
 add("tab.overview", "Show All Tabs", "Tab", ["shift+cmd+\\"], () =>
   useWorkspace.getState().setOverlay({ kind: "overview" }),
 );

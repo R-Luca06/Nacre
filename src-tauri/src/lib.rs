@@ -122,6 +122,8 @@ pub fn run() {
             commands::menu::menu_set,
             commands::data::history_add,
             commands::data::history_search,
+            commands::data::history_prefix,
+            commands::data::package_scripts,
             commands::data::dirs_visit,
             commands::data::dirs_top,
             commands::data::ssh_hosts,

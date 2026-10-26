@@ -72,6 +72,7 @@ export type Overlay =
   | { kind: "prompt"; prompt: PromptRequest }
   | { kind: "settings" }
   | { kind: "overview" }
+  | { kind: "editor"; paneId: string; text: string }
   | null;
 
 interface WorkspaceState {

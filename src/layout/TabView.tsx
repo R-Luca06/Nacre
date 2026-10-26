@@ -11,6 +11,7 @@ import { StickyHeader } from "../terminal/StickyHeader";
 import { AiBar } from "../ai/CommandBar";
 import { CopyMode, HintsOverlay } from "../terminal/Modes";
 import { CursorTrail } from "../terminal/CursorTrail";
+import { Suggest } from "../terminal/Suggest";
 import { showContextMenu } from "../terminal/blockActions";
 
 const pct = (n: number) => `${n * 100}%`;
@@ -118,6 +119,7 @@ function PaneView(props: {
       {recording && <div className="rec-badge">REC</div>}
       {ai && <AiBar key={`${ai.mode}:${ai.blockId ?? ""}`} {...ai} />}
       {session && trail && active && visible && <CursorTrail session={session} />}
+      {session && active && visible && !mode && <Suggest session={session} paneId={id} />}
       {session && mode === "hints" && <HintsOverlay session={session} />}
       {session && mode === "copy" && <CopyMode session={session} />}
       {paneBar && <StatusBar paneId={id} />}
