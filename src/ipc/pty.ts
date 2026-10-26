@@ -43,3 +43,18 @@ export const resize = (id: string, cols: number, rows: number) =>
 export const ack = (id: string, bytes: number) => invoke<void>("pty_ack", { id, bytes });
 export const kill = (id: string) => invoke<void>("pty_kill", { id });
 export const info = (id: string) => invoke<ProcInfo | null>("pty_info", { id });
+
+/** Takes over a shell detached from another window. */
+export function attach(
+  id: string,
+  onData: (data: Uint8Array) => void,
+  onExit: (info: ExitInfo) => void,
+): Promise<number> {
+  const data = new Channel<ArrayBuffer>();
+  data.onmessage = (buf) => onData(new Uint8Array(buf));
+  const exit = new Channel<ExitInfo>();
+  exit.onmessage = onExit;
+  return invoke("pty_attach", { id, onData: data, onExit: exit });
+}
+
+export const detach = (id: string) => invoke<void>("pty_detach", { id });

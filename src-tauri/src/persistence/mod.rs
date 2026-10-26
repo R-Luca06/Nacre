@@ -39,6 +39,10 @@ impl SessionStore {
         self.pending.lock().unwrap().keys().cloned().collect()
     }
 
+    pub fn stash(&self, key: &str, state: Value) {
+        self.pending.lock().unwrap().insert(key.to_owned(), state);
+    }
+
     pub fn take(&self, key: &str) -> Option<Value> {
         self.pending.lock().unwrap().remove(key)
     }

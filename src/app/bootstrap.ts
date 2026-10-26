@@ -27,6 +27,7 @@ import { initPlugins } from "../plugins/host";
 import { applyAppearance } from "./appearance";
 import { initSystem, isQuake } from "./system";
 import { autoCheck } from "./updates";
+import { receiveTab } from "./moveTab";
 import { initPaths } from "./paths";
 import { initMenu, refreshMenu } from "./menu";
 import { initClaude } from "../claude/integration";
@@ -137,7 +138,12 @@ export async function bootstrap() {
   const params = new URLSearchParams(location.search);
   const restoreKey = params.get("restore");
   const saved = restoreKey ? await takeSaved(restoreKey).catch(() => null) : null;
-  const restored = saved ? await restoreWindow(saved, makePaneFor, uid) : false;
+  const detachKey = params.get("detach");
+  const restored = detachKey
+    ? await receiveTab(detachKey)
+    : saved
+      ? await restoreWindow(saved, makePaneFor, uid)
+      : false;
   if (!restored) await newTab({ cwd: params.get("cwd") ?? undefined });
   startProcessPolling();
   if (!isQuake()) startAutosave();

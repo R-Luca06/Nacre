@@ -97,6 +97,11 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::pty_spawn,
+            commands::pty_detach,
+            commands::pty_attach,
+            commands::session_stash,
+            commands::window::windows_list,
+            commands::window::tab_send,
             commands::pty_write,
             commands::pty_resize,
             commands::pty_ack,

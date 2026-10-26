@@ -1,7 +1,8 @@
 use std::sync::atomic::{AtomicU32, Ordering};
 
 use tauri::{
-    AppHandle, LogicalPosition, Manager, Runtime, WebviewUrl, WebviewWindow, WebviewWindowBuilder,
+    AppHandle, Emitter, LogicalPosition, Manager, Runtime, WebviewUrl, WebviewWindow,
+    WebviewWindowBuilder,
 };
 
 static NEXT: AtomicU32 = AtomicU32::new(1);
@@ -84,6 +85,42 @@ pub fn window_new(app: AppHandle, cwd: Option<String>) -> Result<String, String>
     open_window(&app, &params)
         .map(|w| w.label().to_owned())
         .map_err(|e| e.to_string())
+}
+
+/// Normal windows (not the drop-down), in creation order.
+#[tauri::command]
+pub fn windows_list(app: AppHandle) -> Vec<String> {
+    let mut labels: Vec<String> = app
+        .webview_windows()
+        .keys()
+        .filter(|l| l.as_str() != crate::quake::LABEL)
+        .cloned()
+        .collect();
+    labels.sort_by_key(|l| l.trim_start_matches('w').parse::<u64>().unwrap_or(0));
+    labels
+}
+
+/// Gives a stashed tab to `target`, or to a new window.
+#[tauri::command]
+pub fn tab_send(app: AppHandle, target: Option<String>, key: String) -> Result<(), String> {
+    match target {
+        Some(label) => {
+            let win = app
+                .get_webview_window(&label)
+                .ok_or_else(|| format!("no window {label}"))?;
+            let _ = win.show();
+            let _ = win.set_focus();
+            app.emit_to(
+                label.as_str(),
+                "remote",
+                serde_json::json!({ "cmd": "attach-tab", "file": key }),
+            )
+            .map_err(|e| e.to_string())
+        }
+        None => open_window(&app, &[("detach", &key)])
+            .map(|_| ())
+            .map_err(|e| e.to_string()),
+    }
 }
 
 /// Brings the window that owns `pane` to the front and focuses the pane.

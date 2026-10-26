@@ -69,6 +69,8 @@ export interface LaunchOptions {
   integration?: boolean;
   /** asciicast text to play instead of starting a shell. */
   replay?: string;
+  /** Take over a running shell moved from another window. */
+  attach?: boolean;
   cwd?: string;
   shell?: string;
   args?: string[];
@@ -291,15 +293,21 @@ export class TerminalSession {
       }
       return;
     }
+    const onExit = (info: pty.ExitInfo) => {
+      this.exited = info;
+      this.events.onExit?.(info);
+    };
     try {
+      if (this.launch.attach) {
+        this.pid = await pty.attach(this.id, (data) => this.receive(data), onExit);
+        void pty.resize(this.id, this.term.cols, this.term.rows);
+        return;
+      }
       this.pid = await pty.spawn(
         this.id,
         { cols: this.term.cols, rows: this.term.rows, ...this.launch },
         (data) => this.receive(data),
-        (info) => {
-          this.exited = info;
-          this.events.onExit?.(info);
-        },
+        onExit,
       );
     } catch (err) {
       this.term.write(`\x1b[31m${String(err)}\x1b[0m\r\n`);
@@ -473,9 +481,16 @@ export class TerminalSession {
     this.searchAddon.clearDecorations();
   }
 
+  private released = false;
+
+  /** The shell lives on in another window: dispose without killing it. */
+  release() {
+    this.released = true;
+  }
+
   dispose() {
     this.stopReplay?.();
-    if (!this.launch.replay) void pty.kill(this.id);
+    if (!this.launch.replay && !this.released) void pty.kill(this.id);
     this.detachWebgl();
     this.term.dispose();
     this.host.remove();

@@ -51,6 +51,8 @@ export const fr: Record<string, string> = {
   "Open at login": "Ouvrir à la connexion",
   Enable: "Activer",
   "Inline images": "Images dans le terminal",
+  "Move Tab to New Window": "Déplacer l'onglet dans une nouvelle fenêtre",
+  "Move Tab to Next Window": "Déplacer l'onglet dans la fenêtre suivante",
   "Record Pane": "Enregistrer le panneau",
   "Play Recording…": "Lire un enregistrement…",
   "Clipboard history": "Historique du presse-papier",

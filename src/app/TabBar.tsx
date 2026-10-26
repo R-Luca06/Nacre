@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Pin, Plus, X } from "lucide-react";
 import { Menu } from "@tauri-apps/api/menu";
+import { moveTab } from "./moveTab";
 import { type Tab, useWorkspace } from "../store/workspace";
 import { paneIds } from "../layout/tree";
 import { t } from "../i18n";
@@ -117,6 +118,13 @@ function TabItem(props: {
         { text: t("Rename"), action: () => ops.selectTabThen(tab.id, "rename") },
         { text: tab.pinned ? t("Unpin Tab") : t("Pin Tab"), action: () => ops.togglePin(tab.id) },
         { text: t("Duplicate Tab"), action: () => ops.selectTabThen(tab.id, "duplicate") },
+        {
+          text: t("Move Tab to New Window"),
+          action: () => {
+            ops.selectTab(tab.id);
+            void moveTab("new");
+          },
+        },
         {
           text: t("Tab Color"),
           items: [

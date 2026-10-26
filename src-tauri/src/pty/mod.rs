@@ -73,8 +73,18 @@ impl Flow {
     }
 }
 
+/// Where output goes. Empty while a tab moves between windows: output waits in `pending`.
+#[derive(Default)]
+struct Sink {
+    data: Option<Channel<InvokeResponseBody>>,
+    exit: Option<Channel<ExitInfo>>,
+    pending: Vec<u8>,
+    exited: Option<ExitInfo>,
+}
+
 struct Pane {
-    owner: String,
+    owner: Mutex<String>,
+    sink: Arc<Mutex<Sink>>,
     master: Mutex<Box<dyn MasterPty + Send>>,
     writer: Mutex<Box<dyn Write + Send>>,
     killer: Mutex<Box<dyn ChildKiller + Send + Sync>>,
@@ -127,8 +137,14 @@ impl PtyManager {
         let mut reader = pair.master.try_clone_reader().map_err(|e| e.to_string())?;
         let writer = pair.master.take_writer().map_err(|e| e.to_string())?;
         let flow = Arc::new(Flow::default());
+        let sink = Arc::new(Mutex::new(Sink {
+            data: Some(on_data),
+            exit: Some(on_exit),
+            ..Default::default()
+        }));
         let pane = Arc::new(Pane {
-            owner,
+            owner: Mutex::new(owner),
+            sink: sink.clone(),
             master: Mutex::new(pair.master),
             writer: Mutex::new(writer),
             killer: Mutex::new(child.clone_killer()),
@@ -170,15 +186,32 @@ impl PtyManager {
                             Err(_) => break,
                         }
                     }
-                    if on_data.send(InvokeResponseBody::Raw(batch)).is_err() {
-                        break;
+                    let mut s = sink.lock().unwrap();
+                    match &s.data {
+                        Some(ch) => {
+                            if ch.send(InvokeResponseBody::Raw(batch)).is_err() {
+                                break;
+                            }
+                        }
+                        None => {
+                            s.pending.extend_from_slice(&batch);
+                            let over = s.pending.len().saturating_sub(HIGH_WATER);
+                            s.pending.drain(..over);
+                        }
                     }
                 }
                 let status = child.wait().ok();
-                let _ = on_exit.send(ExitInfo {
+                let info = ExitInfo {
                     code: status.as_ref().map(|s| s.exit_code()),
                     signal: status.and_then(|s| s.signal().map(str::to_owned)),
-                });
+                };
+                let mut s = sink.lock().unwrap();
+                match &s.exit {
+                    Some(ch) => {
+                        let _ = ch.send(info);
+                    }
+                    None => s.exited = Some(info),
+                }
             })
             .map_err(|e| e.to_string())?;
 
@@ -228,13 +261,49 @@ impl PtyManager {
         }
     }
 
+    /// Holds output until `attach`; the shell keeps running.
+    pub fn detach(&self, id: &str) -> Result<(), String> {
+        let pane = self.get(id)?;
+        // Ownerless, so closing the source window does not kill it.
+        pane.owner.lock().unwrap().clear();
+        let mut s = pane.sink.lock().unwrap();
+        s.data = None;
+        s.exit = None;
+        Ok(())
+    }
+
+    /// Sends output to another window, starting with what piled up meanwhile.
+    pub fn attach(
+        &self,
+        id: &str,
+        owner: String,
+        on_data: Channel<InvokeResponseBody>,
+        on_exit: Channel<ExitInfo>,
+    ) -> Result<u32, String> {
+        let pane = self.get(id)?;
+        *pane.owner.lock().unwrap() = owner;
+        let mut s = pane.sink.lock().unwrap();
+        let pending = std::mem::take(&mut s.pending);
+        if !pending.is_empty() {
+            on_data
+                .send(InvokeResponseBody::Raw(pending))
+                .map_err(|e| e.to_string())?;
+        }
+        if let Some(info) = s.exited.take() {
+            let _ = on_exit.send(info);
+        }
+        s.data = Some(on_data);
+        s.exit = Some(on_exit);
+        Ok(pane.pid.unwrap_or(0))
+    }
+
     pub fn kill_owned_by(&self, owner: &str) {
         let ids: Vec<String> = self
             .panes
             .lock()
             .unwrap()
             .iter()
-            .filter(|(_, p)| p.owner == owner)
+            .filter(|(_, p)| *p.owner.lock().unwrap() == owner)
             .map(|(id, _)| id.clone())
             .collect();
         for id in ids {
@@ -250,7 +319,11 @@ impl PtyManager {
     }
 
     pub fn owner_of(&self, id: &str) -> Option<String> {
-        self.panes.lock().unwrap().get(id).map(|p| p.owner.clone())
+        self.panes
+            .lock()
+            .unwrap()
+            .get(id)
+            .map(|p| p.owner.lock().unwrap().clone())
     }
 
     pub fn all_pids(&self) -> Vec<(Option<u32>, Option<u32>)> {

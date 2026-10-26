@@ -114,6 +114,32 @@ pub fn session_save(
 }
 
 #[tauri::command]
+pub fn pty_detach(pty: State<'_, PtyManager>, id: String) -> Result<(), String> {
+    pty.detach(&id)
+}
+
+#[tauri::command]
+pub fn pty_attach(
+    webview: Webview,
+    pty: State<'_, PtyManager>,
+    id: String,
+    on_data: Channel<InvokeResponseBody>,
+    on_exit: Channel<ExitInfo>,
+) -> Result<u32, String> {
+    pty.attach(&id, webview.label().to_owned(), on_data, on_exit)
+}
+
+/// Hands a moving tab to the window that will open it.
+#[tauri::command]
+pub fn session_stash(
+    store: State<'_, crate::persistence::SessionStore>,
+    key: String,
+    state: serde_json::Value,
+) {
+    store.stash(&key, state);
+}
+
+#[tauri::command]
 pub fn session_take(
     store: State<'_, crate::persistence::SessionStore>,
     key: String,
